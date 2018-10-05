@@ -2,8 +2,8 @@ package dbusgen
 
 import "strings"
 
-func sigZeroValue(sig string) string {
-	switch sig[0] {
+func sigZeroValue(s string) string {
+	switch s[0] {
 	case 'b':
 		return "false"
 	case 'y', 'n', 'q', 'i', 'u', 'x', 't', 'd', 'h':
@@ -15,9 +15,10 @@ func sigZeroValue(sig string) string {
 	case 'g':
 		return "dbus.Signature{}"
 	case '(':
-		panic("not implemented yet") // TODO
+		d, _ := next(s)
+		return d
 	default:
-		panic("not supported signature: " + string(sig[0]))
+		panic("not supported signature: " + s)
 	}
 }
 

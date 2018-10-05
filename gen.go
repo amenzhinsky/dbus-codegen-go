@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"go/format"
-	"regexp"
 	"strings"
 
 	"github.com/godbus/dbus/introspect"
@@ -76,7 +75,7 @@ import "github.com/godbus/dbus"
 }
 
 func (g *Generator) iface(buf *buffer, iface introspect.Interface) error {
-	typ := nameToGoType(iface.Name, true)
+	typ := newIfaceType(iface.Name)
 	buf.WriteStringf(`// %s returns %s DBus interface implementation.
 func New%s(conn *dbus.Conn, dest string, path dbus.ObjectPath) *%s {
 	return &%s{conn.Object(dest, path)}
@@ -92,7 +91,8 @@ type %s struct {
 
 	for _, method := range iface.Methods {
 		name := strings.Title(method.Name)
-		in, out := argsToGoInOut(method.Args)
+		in := argsToGoArgs(method.Args, "in", "arg")
+		out := argsToGoArgs(method.Args, "out", "ret")
 		buf.WriteStringf(`// %s calls %s.%s method.
 func(o *%s) %s(%s) (%serr error) {
 	err = o.object.Call("%s", 0).Store(%s)
@@ -126,7 +126,7 @@ func(o *%s) %s() (%s, error) {
 
 	for _, sig := range iface.Signals {
 		name := typ + strings.Title(sig.Name) + "Signal"
-		_, args := argsToGoInOut(sig.Args)
+		args := argsToGoArgs(sig.Args, "", "prop")
 		buf.WriteStringf(`// %s represents %s.%s signal.
 type %s struct {
 	%s
@@ -168,33 +168,13 @@ func joinArgs(args []arg, separator byte) string {
 	return buf.String()
 }
 
-var nameRegexp = regexp.MustCompile("(?:^|\\.|_)[a-zA-Z0-9]")
-
-func nameToGoType(name string, export bool) string {
-	if isKeyword(name) {
-		if export {
-			return strings.Title(name)
-		}
-		return "arg" + name
-	}
-	return nameRegexp.ReplaceAllStringFunc(name, func(sub string) string {
-		if sub[0] == '.' || sub[0] == '_' {
-			sub = sub[1:]
-		} else if !export {
-			return sub
-		}
-		return strings.ToUpper(sub)
-	})
-}
-
-func argsToGoInOut(args []introspect.Arg) ([]arg, []arg) {
-	var in, out []arg
+func argsToGoArgs(args []introspect.Arg, direction, prefix string) []arg {
+	out := make([]arg, 0, len(args))
 	for i := range args {
-		if args[i].Direction == "in" {
-			in = append(in, newArg(args[i].Name, args[i].Type, "arg", len(in)))
-		} else {
-			out = append(out, newArg(args[i].Name, args[i].Type, "ret", len(out)))
+		if direction != "" && args[i].Direction != direction {
+			continue
 		}
+		out = append(out, newArg(args[i].Name, args[i].Type, prefix, len(out)))
 	}
-	return in, out
+	return out
 }
