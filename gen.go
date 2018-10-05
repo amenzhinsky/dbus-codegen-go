@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"go/format"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/godbus/dbus/introspect"
@@ -207,52 +206,16 @@ func nameToGoType(name string, export bool) string {
 	})
 }
 
-type arg struct {
-	name string
-	kind string
-}
-
-var keywords = []string{
-	"break", "default", "func", "interface", "select",
-	"case", "defer", "go", "map", "struct",
-	"chan", "else", "goto", "package", "switch",
-	"const", "fallthrough", "if", "range", "type",
-	"continue", "for", "import", "return", "var",
-}
-
-func isKeyword(s string) bool {
-	for _, kw := range keywords {
-		if kw == s {
-			return true
-		}
-	}
-	return false
-}
-
 func argsToGoInOut(args []introspect.Arg) ([]arg, []arg) {
 	var in, out []arg
 	for i := range args {
-		typ := sigToGo(args[i].Type, ",")
 		if args[i].Direction == "in" {
-			in = append(in, arg{varNameToGo(args[i].Name, "arg", len(in)), typ})
+			in = append(in, newArg(args[i].Name, args[i].Type, "arg", len(in)))
 		} else {
-			out = append(out, arg{varNameToGo(args[i].Name, "ret", len(out)), typ})
+			out = append(out, newArg(args[i].Name, args[i].Type, "ret", len(out)))
 		}
 	}
 	return in, out
-}
-
-var varRegexp = regexp.MustCompile("_([a-zA-Z0-9])")
-
-func varNameToGo(name string, prefix string, i int) string {
-	if name == "" {
-		return prefix + strconv.Itoa(i)
-	} else if isKeyword(name) {
-		return prefix + strings.Title(name)
-	}
-	return varRegexp.ReplaceAllStringFunc(name, func(s string) string {
-		return strings.Title(s[1:])
-	})
 }
 
 func sigToGo(sig, join string) string {
