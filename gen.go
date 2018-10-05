@@ -92,22 +92,25 @@ type %s struct {
 `, typ, iface.Name, typ)
 
 	for _, method := range iface.Methods {
+		name := strings.Title(method.Name)
 		in, out := argsToGoInOut(method.Args)
 		buf.WriteStringf(`// %s calls %s.%s method.
 func(o *%s) %s(%s) (%serr error) {
-	err = o.object.Call(%q, 0).Store(%s)
+	err = o.object.Call("%s", 0).Store(%s)
 	return
 }
 
-`, method.Name, iface.Name, method.Name, typ, method.Name,
+`, name, iface.Name, method.Name, typ, name,
 			joinArgs(in, ','), joinArgs(out, ','),
 			iface.Name+"."+method.Name, argsToStore(out))
 	}
 
 	for _, prop := range iface.Properties {
+		method := strings.Title(prop.Name)
 		if strings.Index(prop.Access, "read") >= 0 {
 			retType := sigToGo(prop.Type, "")
-			buf.WriteStringf(`func(o *%s) %s() (%s, error) {
+			buf.WriteStringf(`// %s gets %s.%s property.
+func(o *%s) %s() (%s, error) {
 	var v dbus.Variant
 	if err := o.object.Call(
 		"org.freedesktop.DBus.Properties.Get", 0, "%s", "%s",
@@ -117,17 +120,20 @@ func(o *%s) %s(%s) (%serr error) {
 	return v.Value().(%s), nil
 }
 
-`, typ, prop.Name, retType, iface.Name, prop.Name, goDefaultValue(prop.Type), retType)
+`, method, iface.Name, prop.Name, typ, method, retType,
+				iface.Name, prop.Name, goDefaultValue(prop.Type), retType)
 		}
 	}
 
 	for _, sig := range iface.Signals {
+		name := typ + strings.Title(sig.Name) + "Signal"
 		_, args := argsToGoInOut(sig.Args)
-		buf.WriteStringf(`type %sSignal struct {
+		buf.WriteStringf(`// %s represents %s.%s signal.
+type %s struct {
 	%s
 }
 
-`, sig.Name, joinArgs(args, ';'))
+`, name, sig.Name, iface.Name, name, joinArgs(args, ';'))
 	}
 	return nil
 }
