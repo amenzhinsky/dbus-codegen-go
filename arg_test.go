@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestNewArg(t *testing.T) {
+func TestArg(t *testing.T) {
 	for _, run := range []struct {
 		identifier string
 		signature  string

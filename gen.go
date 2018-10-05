@@ -107,7 +107,7 @@ func(o *%s) %s(%s) (%serr error) {
 	for _, prop := range iface.Properties {
 		method := strings.Title(prop.Name)
 		if strings.Index(prop.Access, "read") >= 0 {
-			retType := sigToGo(prop.Type, "")
+			retType := newSig(prop.Type)[0]
 			buf.WriteStringf(`// %s gets %s.%s property.
 func(o *%s) %s() (%s, error) {
 	var v dbus.Variant
@@ -120,7 +120,7 @@ func(o *%s) %s() (%s, error) {
 }
 
 `, method, iface.Name, prop.Name, typ, method, retType,
-				iface.Name, prop.Name, goDefaultValue(prop.Type), retType)
+				iface.Name, prop.Name, sigZeroValue(prop.Type), retType)
 		}
 	}
 
@@ -135,25 +135,6 @@ type %s struct {
 `, name, sig.Name, iface.Name, name, joinArgs(args, ';'))
 	}
 	return nil
-}
-
-func goDefaultValue(sig string) string {
-	switch sig[0] {
-	case 'b':
-		return "false"
-	case 'y', 'n', 'q', 'i', 'u', 'x', 't', 'd', 'h':
-		return "0"
-	case 's', 'o':
-		return `""`
-	case 'v', 'a':
-		return "nil"
-	case 'g':
-		return "dbus.Signature{}"
-	case '(':
-		panic("not implemented yet")
-	default:
-		panic("not supported signature: " + string(sig[0]))
-	}
 }
 
 type buffer struct {
@@ -216,83 +197,4 @@ func argsToGoInOut(args []introspect.Arg) ([]arg, []arg) {
 		}
 	}
 	return in, out
-}
-
-func sigToGo(sig, join string) string {
-	var r []string
-	for i := 0; i < len(sig); {
-		s, rlen := next(sig[i:])
-		if rlen == 0 {
-			break
-		}
-		i += rlen
-		r = append(r, s)
-	}
-	return strings.Join(r, join)
-}
-
-func next(sig string) (string, int) {
-	if len(sig) == 0 {
-		return "", 0
-	}
-	switch sig[0] {
-	case 'y':
-		return "byte", 1
-	case 'b':
-		return "bool", 1
-	case 'n':
-		return "int16", 1
-	case 'q':
-		return "uint16", 1
-	case 'i':
-		return "int32", 1
-	case 'u':
-		return "uint32", 1
-	case 'x':
-		return "int64", 1
-	case 't':
-		return "uint64", 1
-	case 'd':
-		return "float64", 1
-	case 'h':
-		return "dbus.UnixFD", 1
-	case 's':
-		return "string", 1
-	case 'o':
-		return "dbus.ObjectPath", 1
-	case 'v':
-		return "interface{}", 1
-	case 'g':
-		return "dbus.Signature", 1
-	case 'a':
-		if sig[1] == '{' { // dictionary
-			i := 4
-			k, rlen := next(sig[2:])
-			if rlen != 1 {
-				panic("key is not a primitive")
-			}
-			v, rlen := next(sig[3:])
-			if rlen == 0 {
-				panic("value is not available")
-			}
-			i += rlen
-			return "map[" + k + "]" + v, i
-		}
-		s, rlen := next(sig[1:])
-		return "[]" + s, rlen + 1
-	case '(':
-		i := 1
-		n := 1
-		for i < len(sig) && n != 0 {
-			if sig[i] == '(' {
-				n++
-			} else if sig[i] == ')' {
-				n--
-			}
-			i++
-		}
-		return "struct {" + sigToGo(sig[1:i-1], ";") + "}", i
-	default:
-		panic("not supported signature: " + string(sig[0]))
-	}
 }

@@ -20,7 +20,7 @@ func newArg(identifier, signature string, prefix string, i int) arg {
 				return strings.Title(s[1:])
 			})
 	}
-	return arg{name, sigToGo(signature, ",")}
+	return arg{name, newSig(signature)[0]}
 }
 
 type arg struct {
