@@ -15,7 +15,7 @@ func TestGenerateFreedesktopDBus(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	o, err := g.Parse(b)
+	o, err := g.Generate(b)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -4,27 +4,39 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/amenzhinsky/godbus-codegen"
 	"github.com/godbus/dbus"
-	"github.com/godbus/dbus/introspect"
 )
 
 var (
-	destFlag   string
-	pathFlag   string
-	ifaceFlag  string
-	systemFlag bool
+	destFlag    string
+	pathFlag    string
+	ifaceFlag   string
+	sessionFlag bool
 )
 
 func main() {
-	flag.StringVar(&destFlag, "dest", "", "destination name")
-	flag.StringVar(&pathFlag, "path", "", "object path")
-	flag.StringVar(&ifaceFlag, "iface", "", "interface to inspect")
-	flag.BoolVar(&systemFlag, "system", false, "connect to the system bus instead of the session")
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, `Usage: %s [FLAG...]
+
+Flags:
+`, os.Args[0])
+		flag.PrintDefaults()
+	}
+	flag.StringVar(&destFlag, "dest", "", "destination name to introspect")
+	flag.StringVar(&pathFlag, "path", "", "object path to introspect")
+	flag.StringVar(&ifaceFlag, "iface", "", "generate only for the named interfaces, coma-separated")
+	flag.BoolVar(&sessionFlag, "session", false, "connect to the session bus instead of the system")
 	flag.Parse()
 
+	if flag.NArg() > 0 {
+		flag.Usage()
+		os.Exit(2)
+	}
 	if err := run(); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		os.Exit(1)
@@ -32,45 +44,65 @@ func main() {
 }
 
 func run() error {
-	c, err := connect(systemFlag)
+	c, err := connect(sessionFlag)
 	if err != nil {
 		return err
 	}
 	defer c.Close()
 
-	if destFlag == "" {
-		return errors.New("-dest is mandatory")
-	} else if pathFlag == "" {
-		return errors.New("-path is mandatory")
-	} else if ifaceFlag == "" {
-		return errors.New("-iface is mandatory")
+	var b []byte
+	if destFlag != "" || pathFlag != "" {
+		if destFlag == "" {
+			return errors.New("-dest is required for introspection")
+		} else if pathFlag == "" {
+			return errors.New("-path is required for introspection")
+		}
+		b, err = introspect(sessionFlag, destFlag, dbus.ObjectPath(pathFlag))
+	} else {
+		b, err = ioutil.ReadAll(os.Stdin)
 	}
-
-	n, err := introspect.Call(c.Object(destFlag, dbus.ObjectPath(pathFlag)))
 	if err != nil {
 		return err
 	}
-
 	g, err := dbusgen.New()
 	if err != nil {
 		return err
 	}
-	for _, iface := range n.Interfaces {
-		if iface.Name == ifaceFlag {
-			b, err := g.Generate(&iface)
-			if err != nil {
-				return err
-			}
-			fmt.Println(string(b))
-			return nil
-		}
+	output, err := g.Generate(b, split(ifaceFlag)...)
+	if err != nil {
+		return err
 	}
-	return fmt.Errorf("interface %q not found", ifaceFlag)
+	fmt.Println(string(output))
+	return nil
 }
 
-func connect(system bool) (*dbus.Conn, error) {
-	if system {
-		return dbus.SystemBus()
+func split(s string) []string {
+	ss := make([]string, 0, strings.Count(s, ",")+1)
+	for _, chunk := range strings.Split(s, ",") {
+		if chunk = strings.Trim(chunk, " "); chunk != "" {
+			ss = append(ss, chunk)
+		}
 	}
-	return dbus.SessionBus()
+	return ss
+}
+
+func introspect(session bool, dest string, path dbus.ObjectPath) ([]byte, error) {
+	conn, err := connect(session)
+	if err != nil {
+		return nil, err
+	}
+	var s string
+	if err := conn.Object(dest, path).Call(
+		"org.freedesktop.DBus.Introspectable.Introspect", 0,
+	).Store(&s); err != nil {
+		return nil, err
+	}
+	return []byte(s), nil
+}
+
+func connect(session bool) (*dbus.Conn, error) {
+	if session {
+		return dbus.SessionBus()
+	}
+	return dbus.SystemBus()
 }
