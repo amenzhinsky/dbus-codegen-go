@@ -1,6 +1,7 @@
 package dbusgen
 
 import (
+	"go/token"
 	"regexp"
 	"strconv"
 	"strings"
@@ -40,19 +41,6 @@ func newIfaceType(name string) string {
 	})
 }
 
-var keywords = []string{
-	"break", "default", "func", "interface", "select",
-	"case", "defer", "go", "map", "struct",
-	"chan", "else", "goto", "package", "switch",
-	"const", "fallthrough", "if", "range", "type",
-	"continue", "for", "import", "return", "var",
-}
-
 func isKeyword(s string) bool {
-	for i := 0; i < len(keywords); i++ {
-		if s == keywords[i] {
-			return true
-		}
-	}
-	return false
+	return token.Lookup(s).IsKeyword()
 }
