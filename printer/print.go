@@ -69,13 +69,13 @@ type %s struct {
 	for _, method := range iface.Methods {
 		buf.writef(`// %s calls %s.%s method.
 func(o *%s) %s(%s) (%serr error) {
-	err = o.object.Call("%s", 0).Store(%s)
+	err = o.object.Call("%s", 0, %s).Store(%s)
 	return
 }
 
 `, iface.Type, iface.Name, method.Name, iface.Type, method.Type,
 			joinArgs(method.In, ','), joinArgs(method.Out, ','),
-			iface.Name+"."+method.Type, argsToStore(method.Out))
+			iface.Name+"."+method.Type, joinArgNames(method.In), argsToStore(method.Out))
 	}
 
 	for _, prop := range iface.Properties {
@@ -141,7 +141,7 @@ type Signal interface {
 
 `)
 	buf.writef(`// LookupSignal converts the given raw DBus signal into typed one.
-func LookupSignal(signal dbus.Signal) Signal {
+func LookupSignal(signal *dbus.Signal) Signal {
 	switch signal.Name {
 `)
 	for iface, sigs := range signals {
@@ -185,6 +185,17 @@ func joinArgs(args []*token.Arg, separator byte) string {
 		buf.WriteByte(' ')
 		buf.WriteString(args[i].Type)
 		buf.WriteByte(separator)
+	}
+	return buf.String()
+}
+
+func joinArgNames(args []*token.Arg) string {
+	var buf strings.Builder
+	for i := range args {
+		if i != 0 {
+			buf.WriteByte(',')
+		}
+		buf.WriteString(args[i].Name)
 	}
 	return buf.String()
 }

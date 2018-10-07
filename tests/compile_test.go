@@ -16,7 +16,8 @@ func TestGenerate(t *testing.T) {
 	for _, run := range []struct {
 		xml, gof string
 	}{
-		{"org.freedesktop.DBus.xml", "get_id.gof"},
+		{"org.freedesktop.DBus.xml", "test_signal.gof"},
+		{"org.freedesktop.DBus.xml", "test_single_method.gof"},
 	} {
 		if err := compile(run.xml, run.gof); err != nil {
 			t.Errorf("compile(%q, %q) error: %s", run.xml, run.gof, err)

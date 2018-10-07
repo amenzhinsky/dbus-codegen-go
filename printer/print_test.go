@@ -21,5 +21,5 @@ func TestPrint(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// TODO: test something?
+	// TODO: test s
 }

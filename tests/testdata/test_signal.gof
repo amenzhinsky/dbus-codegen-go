@@ -1,0 +1,38 @@
+package main
+
+import (
+	"errors"
+	"fmt"
+	"os"
+
+	"github.com/godbus/dbus"
+)
+
+func main() {
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
+	conn, err := dbus.SessionBus()
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	sigc := make(chan *dbus.Signal, 10)
+	conn.Signal(sigc)
+
+	o := NewOrgFreedesktopDBus(conn, "org.freedesktop.DBus", "/org/freedesktop/DBus")
+	ret, err := o.RequestName("random.name", 3)
+	if err != nil {
+		return err
+	}
+	if ret != 1 {
+		return errors.New("unexpected return code")
+	}
+	_ = LookupSignal(<-sigc).(*OrgFreedesktopDBusNameAcquiredSignal)
+	return nil
+}
