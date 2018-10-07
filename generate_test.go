@@ -1,6 +1,7 @@
 package dbusgen
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -8,49 +9,62 @@ import (
 	"testing"
 )
 
-func TestGenerateFreedesktopDBus(t *testing.T) {
+func TestGenerate(t *testing.T) {
+	for _, run := range []struct {
+		xml, gof string
+	}{
+		{"org.freedesktop.DBus.xml", "get_id.gof"},
+	} {
+		if err := compile(run.xml, run.gof); err != nil {
+			t.Errorf("compile(%q, %q) error: %s", run.xml, run.gof, err)
+		}
+	}
+}
+
+func compile(xmlFile, goFile string) error {
 	g, err := New(WithPackageName("main"))
 	if err != nil {
-		t.Fatal(err)
+		return err
 	}
-	b, err := ioutil.ReadFile("testdata/test.xml")
+	b, err := ioutil.ReadFile("testdata/" + xmlFile)
 	if err != nil {
-		t.Fatal(err)
+		return err
 	}
-	o, err := g.Generate(b)
+	o, err := g.Generate([][]byte{b})
 	if err != nil {
-		t.Fatal(err)
+		return err
 	}
 
 	temp, err := ioutil.TempDir("", "")
 	if err != nil {
-		t.Fatal(err)
+		return err
 	}
 	defer os.RemoveAll(temp)
 
-	if err := copyFile(temp+"/main.go", "testdata/get_id.sample"); err != nil {
-		t.Fatal(err)
+	if err := copyFile(temp+"/main.go", "testdata/"+goFile); err != nil {
+		return err
 	}
 	if err := ioutil.WriteFile(temp+"/dbus.go", o, 0644); err != nil {
-		t.Fatal(err)
+		return err
 	}
 	cwd, err := os.Getwd()
 	if err != nil {
-		t.Fatal(err)
+		return err
 	}
 	if err := os.Chdir(temp); err != nil {
-		t.Fatal(err)
+		return err
 	}
 	defer os.Chdir(cwd)
 
 	out, err := exec.Command("go", "build", "-o", "a.out").CombinedOutput()
 	if err != nil {
-		t.Fatalf("compilation error: %s", out)
+		return fmt.Errorf("compilation error: %s", out)
 	}
 	out, err = exec.Command("./a.out").CombinedOutput()
 	if err != nil {
-		t.Fatalf("executable error: %s", out)
+		return fmt.Errorf("executable error: %s", out)
 	}
+	return nil
 }
 
 func copyFile(dst, src string) error {

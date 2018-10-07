@@ -72,7 +72,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	output, err := g.Generate(b, split(ifaceFlag)...)
+	output, err := g.Generate([][]byte{b}, split(ifaceFlag)...)
 	if err != nil {
 		return err
 	}
