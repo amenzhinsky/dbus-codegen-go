@@ -222,7 +222,7 @@ func argsToGoArgs(args []introspect.Arg, direction, prefix string, export bool) 
 		if direction != "" && args[i].Direction != direction {
 			continue
 		}
-		out = append(out, newArg(args[i].Name, args[i].Type, prefix, len(out), export))
+		out = append(out, parseArg(args[i].Name, args[i].Type, prefix, len(out), export))
 	}
 	return out
 }
