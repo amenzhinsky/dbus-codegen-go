@@ -9,7 +9,7 @@ import (
 
 var varRegexp = regexp.MustCompile("_+[a-zA-Z0-9]")
 
-func newArg(identifier, signature string, prefix string, i int) arg {
+func newArg(identifier, signature string, prefix string, i int, export bool) arg {
 	var name string
 	if identifier == "" {
 		name = prefix + strconv.Itoa(i)
@@ -20,6 +20,9 @@ func newArg(identifier, signature string, prefix string, i int) arg {
 			varRegexp.ReplaceAllStringFunc(identifier[1:], func(s string) string {
 				return strings.Title(strings.TrimLeft(s, "_"))
 			})
+	}
+	if export {
+		name = strings.Title(name)
 	}
 	return arg{name, newSig(signature)[0]}
 }
