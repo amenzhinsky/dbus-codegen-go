@@ -14,7 +14,7 @@ type GeneratorOption func(g *Generator)
 
 func WithPackageName(name string) GeneratorOption {
 	if name == "" {
-		panic("gtyp is empty")
+		panic("name is empty")
 	}
 	return func(g *Generator) {
 		g.pkgName = name
@@ -68,23 +68,19 @@ import "github.com/godbus/dbus"
 
 `, g.pkgName)
 
-	buf.writef(`// Signal is a common interface for all signals.
-type Signal interface {
-	Name() string
-	Interface() string
-	Sender() string
-	Path() dbus.ObjectPath
-}
-
-`)
-
+	var signals []*signal
 	for _, iface := range ifaces {
-		g.iface(buf, iface)
+		if err := g.iface(buf, iface, &signals); err != nil {
+			return nil, err
+		}
+	}
+	if err := g.signals(buf, signals); err != nil {
+		return nil, err
 	}
 	return format.Source(buf.bytes())
 }
 
-func (g *Generator) iface(buf *buffer, iface introspect.Interface) error {
+func (g *Generator) iface(buf *buffer, iface introspect.Interface, signals *[]*signal) error {
 	typ := newIfaceType(iface.Name)
 	buf.writef(`// %s returns %s DBus interface implementation.
 func New%s(conn *dbus.Conn, dest string, path dbus.ObjectPath) *%s {
@@ -134,8 +130,8 @@ func(o *%s) %s() (%s, error) {
 		}
 	}
 
-	signals := parseSignals(typ, iface.Signals)
-	for _, sig := range signals {
+	for _, sig := range parseSignals(typ, iface.Name, iface.Signals) {
+		*signals = append(*signals, sig)
 		buf.writef(`// %s represents %s.%s signal.
 type %s struct {
 	sender string
@@ -162,22 +158,43 @@ func (s *%s) Path() dbus.ObjectPath {
 `, sig.gtyp, sig.name, iface.Name, sig.gtyp, joinArgs(sig.args, ';'),
 			sig.gtyp, sig.name, sig.gtyp, iface.Name, sig.gtyp, sig.gtyp)
 	}
+	return nil
+}
 
-	//func LookupSignal(signature dbus.Signal) Signal {
-	//switch signature.Name {
-	//case "org.freedesktop.DBus.Properties.PropertiesChanged":
-	//return &OrgFreedesktopDBusPropertiesPropertiesChangedSignal{
-	//sender:                signature.Sender,
-	//path:                  signature.Path,
-	//InterfaceName:         signature.Body[0].(string),
-	//ChangedProperties:     signature.Body[1].(map[string]interface{}),
-	//InvalidatedProperties: signature.Body[2].([]string),
-	//}
-	//default:
-	//return nil
-	//}
-	//}
+func (g *Generator) signals(buf *buffer, signals []*signal) error {
+	if len(signals) == 0 {
+		return nil
+	}
+	buf.writef(`// Signal is a common interface for all signals.
+type Signal interface {
+	Name() string
+	Interface() string
+	Sender() string
+	Path() dbus.ObjectPath
+}
 
+`)
+	buf.writef(`// LookupSignal converts the given raw DBus signal into typed one.
+func LookupSignal(signal dbus.Signal) Signal {
+	switch signal.Name {
+`)
+	for _, sig := range signals {
+		buf.writef(`	case "%s.%s":
+		return &%s{
+			sender: signal.Sender,
+			path:   signal.Path,
+`, sig.iface, sig.name, sig.gtyp)
+		for i, arg := range sig.args {
+			buf.writef("			%s: signal.Body[%d].(%s),\n", arg.name, i, arg.kind)
+		}
+		buf.writef(`		}
+`)
+	}
+	buf.writef(`	default:
+		return nil
+	}
+}
+`)
 	return nil
 }
 
