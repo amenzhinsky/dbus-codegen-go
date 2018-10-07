@@ -2,33 +2,19 @@ package parser
 
 import (
 	"encoding/xml"
-	"go/token"
+	gotoken "go/token"
 	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/amenzhinsky/godbus-codegen/token"
 	"github.com/godbus/dbus/introspect"
 )
 
-type Interface struct {
-	Type       string
-	Name       string
-	Methods    []*Method
-	Properties []*Property
-	Signals    []*Signal
-}
-
-type Method struct {
-	Type string
-	Name string
-	In   []*Arg
-	Out  []*Arg
-}
-
-func parseMethods(methods []introspect.Method) []*Method {
-	list := make([]*Method, 0, len(methods))
+func parseMethods(methods []introspect.Method) []*token.Method {
+	list := make([]*token.Method, 0, len(methods))
 	for _, method := range methods {
-		list = append(list, &Method{
+		list = append(list, &token.Method{
 			Type: strings.Title(method.Name),
 			Name: method.Name,
 			In:   parseArgs(method.Args, "in", "arg", false),
@@ -38,19 +24,10 @@ func parseMethods(methods []introspect.Method) []*Method {
 	return list
 }
 
-type Property struct {
-	Type    string
-	Name    string
-	Return  string
-	Default string
-	Read    bool
-	Write   bool
-}
-
-func parseProperties(props []introspect.Property) []*Property {
-	list := make([]*Property, 0, len(props))
+func parseProperties(props []introspect.Property) []*token.Property {
+	list := make([]*token.Property, 0, len(props))
 	for _, prop := range props {
-		list = append(list, &Property{
+		list = append(list, &token.Property{
 			Type:    strings.Title(prop.Name),
 			Name:    prop.Name,
 			Return:  parseSignature(prop.Type)[0],
@@ -62,16 +39,10 @@ func parseProperties(props []introspect.Property) []*Property {
 	return list
 }
 
-type Signal struct {
-	Type string
-	Name string
-	Args []*Arg
-}
-
-func parseSignals(typ string, sigs []introspect.Signal) []*Signal {
-	list := make([]*Signal, 0, len(sigs))
+func parseSignals(typ string, sigs []introspect.Signal) []*token.Signal {
+	list := make([]*token.Signal, 0, len(sigs))
 	for _, sig := range sigs {
-		list = append(list, &Signal{
+		list = append(list, &token.Signal{
 			Type: typ + strings.Title(sig.Name) + "Signal",
 			Name: sig.Name,
 			Args: parseArgs(sig.Args, "", "prop", true),
@@ -80,13 +51,8 @@ func parseSignals(typ string, sigs []introspect.Signal) []*Signal {
 	return list
 }
 
-type Arg struct {
-	Name string
-	Type string
-}
-
-func parseArgs(args []introspect.Arg, direction, prefix string, export bool) []*Arg {
-	out := make([]*Arg, 0, len(args))
+func parseArgs(args []introspect.Arg, direction, prefix string, export bool) []*token.Arg {
+	out := make([]*token.Arg, 0, len(args))
 	for i := range args {
 		if direction != "" && args[i].Direction != direction {
 			continue
@@ -98,7 +64,7 @@ func parseArgs(args []introspect.Arg, direction, prefix string, export bool) []*
 
 var varRegexp = regexp.MustCompile("_+[a-zA-Z0-9]")
 
-func parseArg(identifier, signature string, prefix string, i int, export bool) *Arg {
+func parseArg(identifier, signature string, prefix string, i int, export bool) *token.Arg {
 	var name string
 	if identifier == "" {
 		name = prefix + strconv.Itoa(i)
@@ -113,18 +79,18 @@ func parseArg(identifier, signature string, prefix string, i int, export bool) *
 	if export {
 		name = strings.Title(name)
 	}
-	return &Arg{Name: name, Type: parseSignature(signature)[0]}
+	return &token.Arg{Name: name, Type: parseSignature(signature)[0]}
 }
 
-func Parse(b []byte) ([]*Interface, error) {
+func Parse(b []byte) ([]*token.Interface, error) {
 	var node introspect.Node
 	if err := xml.Unmarshal(b, &node); err != nil {
 		return nil, err
 	}
-	var ifaces []*Interface
+	var ifaces []*token.Interface
 	for _, iface := range node.Interfaces {
 		typ := ifaceToType(iface.Name)
-		ifaces = append(ifaces, &Interface{
+		ifaces = append(ifaces, &token.Interface{
 			Type:       typ,
 			Name:       iface.Name,
 			Methods:    parseMethods(iface.Methods),
@@ -148,5 +114,5 @@ func ifaceToType(name string) string {
 }
 
 func isKeyword(s string) bool {
-	return token.Lookup(s).IsKeyword()
+	return gotoken.Lookup(s).IsKeyword()
 }

@@ -1,6 +1,10 @@
 package parser
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/amenzhinsky/godbus-codegen/token"
+)
 
 func TestIfaceType(t *testing.T) {
 	name, want := "org.freedesktop.DBus", "OrgFreedesktopDBus"
@@ -17,14 +21,14 @@ func TestParseArg(t *testing.T) {
 		i          int
 		export     bool
 
-		want Arg
+		want token.Arg
 	}{
-		{"", "u", "arg", 8, false, Arg{"arg8", "uint32"}},
-		{"interface", "i", "var", 0, false, Arg{"varInterface", "int32"}},
-		{"my_varName", "o", "in", 1, false, Arg{"myVarName", "dbus.ObjectPath"}},
-		{"camel___case", "s", "in", 2, false, Arg{"camelCase", "string"}},
-		{"CamelCase", "s", "out", 3, false, Arg{"camelCase", "string"}},
-		{"exportVar", "s", "out", 4, true, Arg{"ExportVar", "string"}},
+		{"", "u", "arg", 8, false, token.Arg{Name: "arg8", Type: "uint32"}},
+		{"interface", "i", "var", 0, false, token.Arg{Name: "varInterface", Type: "int32"}},
+		{"my_varName", "o", "in", 1, false, token.Arg{Name: "myVarName", Type: "dbus.ObjectPath"}},
+		{"camel___case", "s", "in", 2, false, token.Arg{Name: "camelCase", Type: "string"}},
+		{"CamelCase", "s", "out", 3, false, token.Arg{Name: "camelCase", Type: "string"}},
+		{"exportVar", "s", "out", 4, true, token.Arg{Name: "ExportVar", Type: "string"}},
 	} {
 		if have := parseArg(
 			run.identifier, run.signature, run.prefix, run.i, run.export,

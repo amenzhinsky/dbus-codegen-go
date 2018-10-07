@@ -9,8 +9,7 @@ import (
 	"strings"
 
 	"github.com/amenzhinsky/godbus-codegen/parser"
-
-	"github.com/amenzhinsky/godbus-codegen"
+	"github.com/amenzhinsky/godbus-codegen/printer"
 	"github.com/godbus/dbus"
 )
 
@@ -68,25 +67,12 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	g, err := dbusgen.New(
-		dbusgen.WithPackageName(packageFlag),
-	)
-	if err != nil {
-		return err
-	}
-
 	ifaces, err := parser.Parse(b)
 	if err != nil {
 		return err
 	}
-
 	// TODO: split(ifaceFlag)
-	output, err := g.Generate(ifaces...)
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(output))
-	return nil
+	return printer.Print(os.Stdout, packageFlag, ifaces)
 }
 
 func split(s string) []string {

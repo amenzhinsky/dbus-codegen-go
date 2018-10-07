@@ -1,4 +1,4 @@
-package dbusgen
+package integration_test
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/amenzhinsky/godbus-codegen/parser"
+	"github.com/amenzhinsky/godbus-codegen/printer"
 )
 
 func TestGenerate(t *testing.T) {
@@ -24,19 +25,11 @@ func TestGenerate(t *testing.T) {
 }
 
 func compile(xmlFile, goFile string) error {
-	g, err := New(WithPackageName("main"))
-	if err != nil {
-		return err
-	}
 	b, err := ioutil.ReadFile("testdata/" + xmlFile)
 	if err != nil {
 		return err
 	}
 	ifaces, err := parser.Parse(b)
-	if err != nil {
-		return err
-	}
-	o, err := g.Generate(ifaces...)
 	if err != nil {
 		return err
 	}
@@ -47,10 +40,16 @@ func compile(xmlFile, goFile string) error {
 	}
 	defer os.RemoveAll(temp)
 
-	if err := copyFile(temp+"/main.go", "testdata/"+goFile); err != nil {
+	f, err := os.OpenFile(temp+"/dbus.go", os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
+	if err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(temp+"/dbus.go", o, 0644); err != nil {
+	if err = printer.Print(f, "main", ifaces); err != nil {
+		return err
+	}
+	defer f.Close()
+
+	if err := copyFile(temp+"/main.go", "testdata/"+goFile); err != nil {
 		return err
 	}
 	cwd, err := os.Getwd()
