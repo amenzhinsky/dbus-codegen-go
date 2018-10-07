@@ -24,7 +24,7 @@ func TestParseSignals(t *testing.T) {
 				}},
 			},
 			[]*signal{
-				{"OrgBluezValueChangedSignal", "org.bluez", "ValueChanged", []arg{
+				{"OrgBluezValueChangedSignal", "org.bluez", "ValueChanged", []*arg{
 					{"Prop", "uint32"},
 				}},
 			},

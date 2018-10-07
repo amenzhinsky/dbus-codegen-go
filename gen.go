@@ -210,7 +210,7 @@ func (b *buffer) bytes() []byte {
 	return b.buf.Bytes()
 }
 
-func argsToStore(args []arg) string {
+func argsToStore(args []*arg) string {
 	var buf strings.Builder
 	for i := range args {
 		if i != 0 {
@@ -222,7 +222,7 @@ func argsToStore(args []arg) string {
 	return buf.String()
 }
 
-func joinArgs(args []arg, separator byte) string {
+func joinArgs(args []*arg, separator byte) string {
 	var buf strings.Builder
 	for i := range args {
 		buf.WriteString(args[i].name)
@@ -233,8 +233,8 @@ func joinArgs(args []arg, separator byte) string {
 	return buf.String()
 }
 
-func argsToGoArgs(args []introspect.Arg, direction, prefix string, export bool) []arg {
-	out := make([]arg, 0, len(args))
+func argsToGoArgs(args []introspect.Arg, direction, prefix string, export bool) []*arg {
+	out := make([]*arg, 0, len(args))
 	for i := range args {
 		if direction != "" && args[i].Direction != direction {
 			continue

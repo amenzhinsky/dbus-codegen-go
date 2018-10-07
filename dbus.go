@@ -10,7 +10,7 @@ type signal struct {
 	gtyp  string
 	iface string
 	name  string
-	args  []arg
+	args  []*arg
 }
 
 func parseSignals(gtyp, iface string, sigs []introspect.Signal) []*signal {

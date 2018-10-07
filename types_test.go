@@ -22,9 +22,9 @@ func TestParseArg(t *testing.T) {
 		{"CamelCase", "s", "out", 3, false, arg{"camelCase", "string"}},
 		{"exportVar", "s", "out", 4, true, arg{"ExportVar", "string"}},
 	} {
-		if have := parseArg(run.identifier, run.signature, run.prefix, run.i, run.export); have != run.want {
+		if have := parseArg(run.identifier, run.signature, run.prefix, run.i, run.export); *have != run.want {
 			t.Errorf("parseArg(%q, %q, %q, %d, %t) = %v, want %v",
-				run.identifier, run.signature, run.prefix, run.i, run.export, have, run.want,
+				run.identifier, run.signature, run.prefix, run.i, run.export, *have, run.want,
 			)
 		}
 	}

@@ -9,7 +9,7 @@ import (
 
 var varRegexp = regexp.MustCompile("_+[a-zA-Z0-9]")
 
-func parseArg(identifier, signature string, prefix string, i int, export bool) arg {
+func parseArg(identifier, signature string, prefix string, i int, export bool) *arg {
 	var name string
 	if identifier == "" {
 		name = prefix + strconv.Itoa(i)
@@ -24,7 +24,7 @@ func parseArg(identifier, signature string, prefix string, i int, export bool) a
 	if export {
 		name = strings.Title(name)
 	}
-	return arg{name, parseSignature(signature)[0]}
+	return &arg{name, parseSignature(signature)[0]}
 }
 
 type arg struct {
