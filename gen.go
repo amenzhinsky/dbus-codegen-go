@@ -14,7 +14,7 @@ type GeneratorOption func(g *Generator)
 
 func WithPackageName(name string) GeneratorOption {
 	if name == "" {
-		panic("name is empty")
+		panic("gtyp is empty")
 	}
 	return func(g *Generator) {
 		g.pkgName = name
@@ -68,6 +68,16 @@ import "github.com/godbus/dbus"
 
 `, g.pkgName)
 
+	buf.writef(`// Signal is a common interface for all signals.
+type Signal interface {
+	Name() string
+	Interface() string
+	Sender() string
+	Path() dbus.ObjectPath
+}
+
+`)
+
 	for _, iface := range ifaces {
 		g.iface(buf, iface)
 	}
@@ -107,7 +117,7 @@ func(o *%s) %s(%s) (%serr error) {
 	for _, prop := range iface.Properties {
 		method := strings.Title(prop.Name)
 		if strings.Index(prop.Access, "read") >= 0 {
-			retType := newSig(prop.Type)[0]
+			retType := parseSignature(prop.Type)[0]
 			buf.writef(`// %s gets %s.%s property.
 func(o *%s) %s() (%s, error) {
 	var v dbus.Variant
@@ -120,15 +130,17 @@ func(o *%s) %s() (%s, error) {
 }
 
 `, method, iface.Name, prop.Name, typ, method, retType,
-				iface.Name, prop.Name, sigZeroValue(prop.Type), retType)
+				iface.Name, prop.Name, signatureZeroValue(prop.Type), retType)
 		}
 	}
 
-	for _, sig := range iface.Signals {
-		name := typ + strings.Title(sig.Name) + "Signal"
-		args := argsToGoArgs(sig.Args, "", "prop", true)
+	signals := parseSignals(typ, iface.Signals)
+	for _, sig := range signals {
 		buf.writef(`// %s represents %s.%s signal.
 type %s struct {
+	sender string
+	path   dbus.ObjectPath
+
 	%s
 }
 
@@ -139,8 +151,33 @@ func (s *%s) Name() string {
 func (s *%s) Interface() string {
 	return "%s"
 }
-`, name, sig.Name, iface.Name, name, joinArgs(args, ';'), name, sig.Name, name, iface.Name)
+
+func (s *%s) Sender() string {
+	return s.sender
+}
+
+func (s *%s) Path() dbus.ObjectPath {
+	return s.path
+}
+`, sig.gtyp, sig.name, iface.Name, sig.gtyp, joinArgs(sig.args, ';'),
+			sig.gtyp, sig.name, sig.gtyp, iface.Name, sig.gtyp, sig.gtyp)
 	}
+
+	//func LookupSignal(signature dbus.Signal) Signal {
+	//switch signature.Name {
+	//case "org.freedesktop.DBus.Properties.PropertiesChanged":
+	//return &OrgFreedesktopDBusPropertiesPropertiesChangedSignal{
+	//sender:                signature.Sender,
+	//path:                  signature.Path,
+	//InterfaceName:         signature.Body[0].(string),
+	//ChangedProperties:     signature.Body[1].(map[string]interface{}),
+	//InvalidatedProperties: signature.Body[2].([]string),
+	//}
+	//default:
+	//return nil
+	//}
+	//}
+
 	return nil
 }
 

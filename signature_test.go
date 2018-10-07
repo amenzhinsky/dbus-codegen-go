@@ -6,7 +6,7 @@ import (
 )
 
 func TestSig(t *testing.T) {
-	for s, want := range map[string]sig{
+	for s, want := range map[string]signature{
 		"y":        {"byte"},
 		"bb":       {"bool", "bool"},
 		"nqiuxtd":  {"int16", "uint16", "int32", "uint32", "int64", "uint64", "float64"},
@@ -17,8 +17,8 @@ func TestSig(t *testing.T) {
 		"a{yv}":    {"map[byte]interface{}"},
 		"(yb)":     {"struct {byte;bool}"},
 	} {
-		if have := newSig(s); !reflect.DeepEqual(have, want) {
-			t.Errorf("newSig(%q) = %v, want %v", s, have, want)
+		if have := parseSignature(s); !reflect.DeepEqual(have, want) {
+			t.Errorf("parseSignature(%q) = %v, want %v", s, have, want)
 		}
 	}
 }

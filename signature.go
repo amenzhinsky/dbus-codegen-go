@@ -2,7 +2,7 @@ package dbusgen
 
 import "strings"
 
-func sigZeroValue(s string) string {
+func signatureZeroValue(s string) string {
 	switch s[0] {
 	case 'b':
 		return "false"
@@ -22,13 +22,13 @@ func sigZeroValue(s string) string {
 	}
 }
 
-type sig []string
+type signature []string
 
-func (s sig) join(sep string) string {
+func (s signature) join(sep string) string {
 	return strings.Join([]string(s), sep)
 }
 
-func newSig(s string) sig {
+func parseSignature(s string) signature {
 	var ss []string
 	for i := 0; i < len(s); {
 		s, rlen := next(s[i:])
@@ -101,7 +101,7 @@ func next(s string) (string, int) {
 			}
 			i++
 		}
-		return "struct {" + newSig(s[1:i-1]).join(";") + "}", i
+		return "struct {" + parseSignature(s[1:i-1]).join(";") + "}", i
 	default:
 		panic("not supported signature: " + string(s[0]))
 	}

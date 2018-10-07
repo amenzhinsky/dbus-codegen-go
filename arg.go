@@ -24,7 +24,7 @@ func newArg(identifier, signature string, prefix string, i int, export bool) arg
 	if export {
 		name = strings.Title(name)
 	}
-	return arg{name, newSig(signature)[0]}
+	return arg{name, parseSignature(signature)[0]}
 }
 
 type arg struct {
