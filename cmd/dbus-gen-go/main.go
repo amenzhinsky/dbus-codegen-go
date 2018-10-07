@@ -17,6 +17,7 @@ var (
 	pathFlag    string
 	ifaceFlag   string
 	sessionFlag bool
+	packageFlag string
 )
 
 func main() {
@@ -31,6 +32,7 @@ Flags:
 	flag.StringVar(&pathFlag, "path", "", "object path to introspect")
 	flag.StringVar(&ifaceFlag, "iface", "", "generate only for the named interfaces, coma-separated")
 	flag.BoolVar(&sessionFlag, "session", false, "connect to the session bus instead of the system")
+	flag.StringVar(&packageFlag, "package", "dbusgen", "generated package name")
 	flag.Parse()
 
 	if flag.NArg() > 0 {
@@ -64,7 +66,9 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	g, err := dbusgen.New()
+	g, err := dbusgen.New(
+		dbusgen.WithPackageName(packageFlag),
+	)
 	if err != nil {
 		return err
 	}

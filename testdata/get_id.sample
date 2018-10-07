@@ -1,0 +1,29 @@
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/godbus/dbus"
+)
+
+func main() {
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
+	conn, err := dbus.SystemBus()
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	o := NewOrgFreedesktopDBus(conn, "org.freedesktop.DBus", "/org/freedesktop/DBus")
+	if _, err := o.GetId(); err != nil {
+		return err
+	}
+	return nil
+}
