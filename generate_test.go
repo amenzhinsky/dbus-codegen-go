@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/exec"
 	"testing"
+
+	"github.com/amenzhinsky/godbus-codegen/parser"
 )
 
 func TestGenerate(t *testing.T) {
@@ -30,7 +32,11 @@ func compile(xmlFile, goFile string) error {
 	if err != nil {
 		return err
 	}
-	o, err := g.Generate([][]byte{b})
+	ifaces, err := parser.Parse(b)
+	if err != nil {
+		return err
+	}
+	o, err := g.Generate(ifaces...)
 	if err != nil {
 		return err
 	}
