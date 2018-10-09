@@ -16,12 +16,11 @@ type Method struct {
 }
 
 type Property struct {
-	Type    string
-	Name    string
-	Return  string
-	Default string
-	Read    bool
-	Write   bool
+	Type  string
+	Name  string
+	Arg   *Arg
+	Read  bool
+	Write bool
 }
 
 type Signal struct {

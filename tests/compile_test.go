@@ -12,16 +12,22 @@ import (
 	"github.com/amenzhinsky/godbus-codegen/printer"
 )
 
-func TestGenerate(t *testing.T) {
+func TestCompile(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode")
+	}
 	for _, run := range []struct {
 		xml, gof string
 	}{
 		{"org.freedesktop.DBus.xml", "test_signal.gof"},
 		{"org.freedesktop.DBus.xml", "test_single_method.gof"},
+		{"org.freedesktop.DBus.xml", "test_properties.gof"},
 	} {
-		if err := compile(run.xml, run.gof); err != nil {
-			t.Errorf("compile(%q, %q) error: %s", run.xml, run.gof, err)
-		}
+		t.Run(run.gof, func(t *testing.T) {
+			if err := compile(run.xml, run.gof); err != nil {
+				t.Errorf("compile(%q, %q) error: %s", run.xml, run.gof, err)
+			}
+		})
 	}
 }
 

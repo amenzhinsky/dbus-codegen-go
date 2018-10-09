@@ -2,26 +2,6 @@ package parser
 
 import "strings"
 
-func signatureZeroValue(s string) string {
-	switch s[0] {
-	case 'b':
-		return "false"
-	case 'y', 'n', 'q', 'i', 'u', 'x', 't', 'd', 'h':
-		return "0"
-	case 's', 'o':
-		return `""`
-	case 'v', 'a':
-		return "nil"
-	case 'g':
-		return "dbus.Signature{}"
-	case '(':
-		d, _ := next(s)
-		return d
-	default:
-		panic("not supported signature: " + s)
-	}
-}
-
 type signature []string
 
 func (s signature) join(sep string) string {

@@ -22,17 +22,29 @@ func run() error {
 	}
 	defer conn.Close()
 
-	sigc := make(chan *dbus.Signal, 10)
+	sigc := make(chan *dbus.Signal, 1)
 	conn.Signal(sigc)
 
+	const name = "dbusgen.test"
 	o := NewOrgFreedesktopDBus(conn, "org.freedesktop.DBus", "/org/freedesktop/DBus")
-	ret, err := o.RequestName("random.name", 3)
+	ret, err := o.RequestName(name, 3)
 	if err != nil {
 		return err
 	}
 	if ret != 1 {
 		return errors.New("unexpected return code")
 	}
-	_ = LookupSignal(<-sigc).(*OrgFreedesktopDBusNameAcquiredSignal)
+Retry:
+	sig := LookupSignal(<-sigc).(*OrgFreedesktopDBusNameAcquiredSignal)
+	if sig.Body().Prop0[0] == ':' {
+		goto Retry
+	}
+	if sig.Sender() != "org.freedesktop.DBus" ||
+		sig.Path() != "/org/freedesktop/DBus" ||
+		sig.Body().Prop0 != name {
+		return fmt.Errorf("invalid signal = %v, want %v", sig, []interface{}{
+			sig.Sender(), sig.Path(), name,
+		})
+	}
 	return nil
 }

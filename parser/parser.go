@@ -25,30 +25,29 @@ func parseMethods(methods []introspect.Method) []*token.Method {
 }
 
 func parseProperties(props []introspect.Property) []*token.Property {
-	list := make([]*token.Property, 0, len(props))
+	properties := make([]*token.Property, 0, len(props))
 	for _, prop := range props {
-		list = append(list, &token.Property{
-			Type:    strings.Title(prop.Name),
-			Name:    prop.Name,
-			Return:  parseSignature(prop.Type)[0],
-			Default: signatureZeroValue(prop.Type),
-			Read:    strings.Index(prop.Access, "read") >= 0,
-			Write:   strings.Index(prop.Access, "write") >= 0,
+		properties = append(properties, &token.Property{
+			Type:  strings.Title(prop.Name),
+			Name:  prop.Name,
+			Arg:   parseArg(prop.Name, prop.Type, "v", 0, false),
+			Read:  strings.Index(prop.Access, "read") != -1,
+			Write: strings.Index(prop.Access, "write") != -1,
 		})
 	}
-	return list
+	return properties
 }
 
 func parseSignals(typ string, sigs []introspect.Signal) []*token.Signal {
-	list := make([]*token.Signal, 0, len(sigs))
+	signals := make([]*token.Signal, 0, len(sigs))
 	for _, sig := range sigs {
-		list = append(list, &token.Signal{
+		signals = append(signals, &token.Signal{
 			Type: typ + strings.Title(sig.Name) + "Signal",
 			Name: sig.Name,
 			Args: parseArgs(sig.Args, "", "prop", true),
 		})
 	}
-	return list
+	return signals
 }
 
 func parseArgs(args []introspect.Arg, direction, prefix string, export bool) []*token.Arg {
@@ -57,7 +56,7 @@ func parseArgs(args []introspect.Arg, direction, prefix string, export bool) []*
 		if direction != "" && args[i].Direction != direction {
 			continue
 		}
-		out = append(out, parseArg(args[i].Name, args[i].Type, prefix, len(out), export))
+		out = append(out, parseArg(args[i].Name, args[i].Type, prefix, i, export))
 	}
 	return out
 }
