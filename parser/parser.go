@@ -11,6 +11,25 @@ import (
 	"github.com/godbus/dbus/introspect"
 )
 
+func Parse(b []byte) ([]*token.Interface, error) {
+	var node introspect.Node
+	if err := xml.Unmarshal(b, &node); err != nil {
+		return nil, err
+	}
+	var ifaces []*token.Interface
+	for _, iface := range node.Interfaces {
+		typ := ifaceToType(iface.Name)
+		ifaces = append(ifaces, &token.Interface{
+			Type:       typ,
+			Name:       iface.Name,
+			Methods:    parseMethods(iface.Methods),
+			Properties: parseProperties(iface.Properties),
+			Signals:    parseSignals(typ, iface.Signals),
+		})
+	}
+	return ifaces, nil
+}
+
 func parseMethods(methods []introspect.Method) []*token.Method {
 	list := make([]*token.Method, 0, len(methods))
 	for _, method := range methods {
@@ -80,25 +99,6 @@ func parseArg(identifier, signature string, prefix string, i int, export bool) *
 		name = prefix + strings.Title(name)
 	}
 	return &token.Arg{Name: name, Type: parseSignature(signature)[0]}
-}
-
-func Parse(b []byte) ([]*token.Interface, error) {
-	var node introspect.Node
-	if err := xml.Unmarshal(b, &node); err != nil {
-		return nil, err
-	}
-	var ifaces []*token.Interface
-	for _, iface := range node.Interfaces {
-		typ := ifaceToType(iface.Name)
-		ifaces = append(ifaces, &token.Interface{
-			Type:       typ,
-			Name:       iface.Name,
-			Methods:    parseMethods(iface.Methods),
-			Properties: parseProperties(iface.Properties),
-			Signals:    parseSignals(typ, iface.Signals),
-		})
-	}
-	return ifaces, nil
 }
 
 var ifaceRegexp = regexp.MustCompile("\\.[a-zA-Z0-9]")

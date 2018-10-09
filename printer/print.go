@@ -37,14 +37,13 @@ func Print(out io.Writer, pkgName string, ifaces []*token.Interface) error {
 	if err := writeHeader(buf, pkgName, ifaces); err != nil {
 		return err
 	}
-	signals := map[string][]*token.Signal{}
 	for _, iface := range ifaces {
-		if err := writeIface(buf, iface, signals); err != nil {
+		if err := writeIface(buf, iface); err != nil {
 			return err
 		}
 	}
-	if len(signals) > 0 {
-		if err := writeSignalFuncs(buf, signals); err != nil {
+	if haveSignals(ifaces) {
+		if err := writeSignalFuncs(buf, ifaces); err != nil {
 			return err
 		}
 	}
@@ -58,6 +57,15 @@ func Print(out io.Writer, pkgName string, ifaces []*token.Interface) error {
 	}
 	_, err = out.Write(b)
 	return err
+}
+
+func haveSignals(ifaces []*token.Interface) bool {
+	for _, iface := range ifaces {
+		if len(iface.Signals) != 0 {
+			return true
+		}
+	}
+	return false
 }
 
 // sortAll sorts all entities to provide the same output each run.
@@ -110,7 +118,7 @@ func writeHeader(buf *buffer, pkgName string, ifaces []*token.Interface) error {
 	return nil
 }
 
-func writeIface(buf *buffer, iface *token.Interface, signals map[string][]*token.Signal) error {
+func writeIface(buf *buffer, iface *token.Interface) error {
 	buf.writef(`// %s returns %s DBus interface implementation.
 func New%s(conn *dbus.Conn, dest string, path dbus.ObjectPath) *%s {
 	return &%s{conn.Object(dest, path)}
@@ -153,9 +161,6 @@ func(o *%s) %s() (%s %s, err error) {
 		}
 	}
 
-	if len(iface.Signals) > 0 {
-		signals[iface.Name] = iface.Signals
-	}
 	for _, sig := range iface.Signals {
 		buf.writef(`// %s represents %s.%s signal.
 type %s struct {
@@ -202,7 +207,7 @@ func (s *%s) Body() %sBody {
 	return nil
 }
 
-func writeSignalFuncs(buf *buffer, signals map[string][]*token.Signal) error {
+func writeSignalFuncs(buf *buffer, ifaces []*token.Interface) error {
 	buf.writef(`// Signal is a common interface for all signals.
 type Signal interface {
 	Name() string
@@ -215,14 +220,14 @@ type Signal interface {
 func LookupSignal(signal *dbus.Signal) Signal {
 	switch signal.Name {
 `)
-	for iface, sigs := range signals {
-		for _, sig := range sigs {
+	for _, iface := range ifaces {
+		for _, sig := range iface.Signals {
 			buf.writef(`	case "%s.%s":
 		return &%s{
 			sender: signal.Sender,
 			path:   signal.Path,
 			body:   %sBody{
-`, iface, sig.Name, sig.Type, sig.Type)
+`, iface.Name, sig.Name, sig.Type, sig.Type)
 			for i, arg := range sig.Args {
 				buf.writef("				%s: signal.Body[%d].(%s),\n", arg.Name, i, arg.Type)
 			}
