@@ -1,16 +1,34 @@
 package integration_test
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"reflect"
 	"testing"
 
 	"github.com/amenzhinsky/godbus-codegen/parser"
 	"github.com/amenzhinsky/godbus-codegen/printer"
+	"github.com/amenzhinsky/godbus-codegen/token"
 )
+
+func TestOutputHashSum(t *testing.T) {
+	ifaces := parse(t, "org.freedesktop.DBus.xml")
+	hash1 := sha256.New()
+	hash2 := sha256.New()
+	if err := printer.Print(hash1, "main", ifaces); err != nil {
+		t.Fatal(err)
+	}
+	if err := printer.Print(hash2, "main", ifaces); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(hash1.Sum(nil), hash2.Sum(nil)) {
+		t.Fatal("outputs have different hash sums")
+	}
+}
 
 func TestCompile(t *testing.T) {
 	if testing.Short() {
@@ -24,23 +42,28 @@ func TestCompile(t *testing.T) {
 		{"org.freedesktop.DBus.xml", "test_properties.gof"},
 	} {
 		t.Run(run.gof, func(t *testing.T) {
-			if err := compile(run.xml, run.gof); err != nil {
+			ifaces := parse(t, "org.freedesktop.DBus.xml")
+			if err := compile(ifaces, run.gof); err != nil {
 				t.Errorf("compile(%q, %q) error: %s", run.xml, run.gof, err)
 			}
 		})
 	}
 }
 
-func compile(xmlFile, goFile string) error {
+func parse(t *testing.T, xmlFile string) []*token.Interface {
+	t.Helper()
 	b, err := ioutil.ReadFile("testdata/" + xmlFile)
 	if err != nil {
-		return err
+		t.Fatal(err)
 	}
 	ifaces, err := parser.Parse(b)
 	if err != nil {
-		return err
+		t.Fatal(err)
 	}
+	return ifaces
+}
 
+func compile(ifaces []*token.Interface, goFile string) error {
 	temp, err := ioutil.TempDir("", "")
 	if err != nil {
 		return err
