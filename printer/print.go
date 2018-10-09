@@ -35,13 +35,16 @@ func Print(out io.Writer, pkgName string, ifaces []*token.Interface) error {
 
 	sortAll(ifaces)
 	writeHeader(buf, pkgName, ifaces)
-	for _, iface := range ifaces {
-		writeIface(buf, iface)
-	}
+	writeInterfaceLookup(buf, ifaces)
 	if haveSignals(ifaces) {
 		writeSignalLookup(buf, ifaces)
 	}
-	writeInterfaceLookup(buf, ifaces)
+	for _, iface := range ifaces {
+		writeInterface(buf, iface)
+		writeMethods(buf, iface)
+		writeProperties(buf, iface)
+		writeSignals(buf, iface)
+	}
 
 	//fmt.Println(string(buf.bytes()))
 
@@ -112,12 +115,16 @@ func writeHeader(buf *buffer, pkgName string, ifaces []*token.Interface) {
 	buf.writeln(`import "github.com/godbus/dbus"`)
 }
 
-func writeIface(buf *buffer, iface *token.Interface) {
+func writeInterface(buf *buffer, iface *token.Interface) {
 	buf.writef(`// %s returns %s DBus interface implementation.
 func New%s(conn *dbus.Conn, dest string, path dbus.ObjectPath) *%s {
 	return &%s{conn.Object(dest, path)}
 }
-`, iface.Type, iface.Name, iface.Type, iface.Type, iface.Type)
+`,
+		iface.Type, iface.Name,
+		iface.Type, iface.Type,
+		iface.Type,
+	)
 	buf.writef(`// %s implements %s DBus interface.
 type %s struct {
 	object dbus.BusObject
@@ -131,7 +138,9 @@ type %s struct {
 	return o.object
 }
 `, iface.Type)
+}
 
+func writeMethods(buf *buffer, iface *token.Interface) {
 	for _, method := range iface.Methods {
 		buf.writef(`// %s calls %s.%s method.
 func(o *%s) %s(%s) (%serr error) {
@@ -144,12 +153,14 @@ func(o *%s) %s(%s) (%serr error) {
 			iface.Name+"."+method.Type, joinArgNames(method.In), joinStoreArgs(method.Out),
 		)
 	}
+}
 
+func writeProperties(buf *buffer, iface *token.Interface) {
 	for _, prop := range iface.Properties {
 		if prop.Read {
 			buf.writef(`// %s gets %s.%s property.
 func(o *%s) %s() (%s %s, err error) {
-	o.object.Call("org.freedesktop.DBus.Properties.Get", 0, "%s", "%s").Store(&%s)
+	err = o.object.Call("org.freedesktop.DBus.Properties.Get", 0, "%s", "%s").Store(&%s)
 	return
 }
 `,
@@ -158,8 +169,13 @@ func(o *%s) %s() (%s %s, err error) {
 				iface.Name, prop.Name, prop.Arg.Name,
 			)
 		}
+		if prop.Write {
+			// TODO
+		}
 	}
+}
 
+func writeSignals(buf *buffer, iface *token.Interface) {
 	for _, sig := range iface.Signals {
 		buf.writef(`// %s represents %s.%s signal.
 type %s struct {
