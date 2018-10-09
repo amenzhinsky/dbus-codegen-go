@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go/format"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/amenzhinsky/godbus-codegen/token"
@@ -30,6 +31,8 @@ func (b *buffer) bytes() []byte {
 }
 
 func Print(out io.Writer, pkgName string, ifaces []*token.Interface) error {
+	sortAll(ifaces)
+
 	buf := &buffer{}
 	if err := writeHeader(buf, pkgName, ifaces); err != nil {
 		return err
@@ -53,6 +56,24 @@ func Print(out io.Writer, pkgName string, ifaces []*token.Interface) error {
 	}
 	_, err = out.Write(b)
 	return err
+}
+
+// sortAll sorts all entities to provide the same output each run.
+func sortAll(ifaces []*token.Interface) {
+	sort.Slice(ifaces, func(i, j int) bool {
+		return ifaces[i].Name < ifaces[j].Name
+	})
+	for _, iface := range ifaces {
+		sort.Slice(iface.Methods, func(i, j int) bool {
+			return iface.Methods[i].Name < iface.Methods[j].Name
+		})
+		sort.Slice(iface.Properties, func(i, j int) bool {
+			return iface.Properties[i].Name < iface.Properties[j].Name
+		})
+		sort.Slice(iface.Signals, func(i, j int) bool {
+			return iface.Signals[i].Name < iface.Signals[j].Name
+		})
+	}
 }
 
 func writeHeader(buf *buffer, pkgName string, ifaces []*token.Interface) error {

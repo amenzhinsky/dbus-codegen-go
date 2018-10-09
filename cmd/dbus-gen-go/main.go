@@ -1,12 +1,13 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/amenzhinsky/godbus-codegen/token"
 
 	"github.com/amenzhinsky/godbus-codegen/parser"
 	"github.com/amenzhinsky/godbus-codegen/printer"
@@ -30,7 +31,7 @@ Flags:
 		flag.PrintDefaults()
 	}
 	flag.StringVar(&destFlag, "dest", "", "destination name to introspect")
-	flag.StringVar(&pathFlag, "path", "", "object path to introspect")
+	flag.StringVar(&pathFlag, "path", "/", "object path to introspect, coma-separated")
 	flag.StringVar(&ifaceFlag, "iface", "", "generate only for the named interfaces, coma-separated")
 	flag.BoolVar(&sessionFlag, "session", false, "connect to the session bus instead of the system")
 	flag.StringVar(&packageFlag, "package", "dbusgen", "generated package name")
@@ -53,26 +54,45 @@ func run() error {
 	}
 	defer c.Close()
 
-	var b []byte
-	if destFlag != "" || pathFlag != "" {
-		if destFlag == "" {
-			return errors.New("-dest is required for introspection")
-		} else if pathFlag == "" {
-			return errors.New("-path is required for introspection")
+	var ifaces []*token.Interface
+	if destFlag != "" {
+		for _, path := range split(pathFlag) {
+			b, err := introspect(sessionFlag, destFlag, dbus.ObjectPath(path))
+			if err != nil {
+				return err
+			}
+			chunk, err := parser.Parse(b)
+			if err != nil {
+				return err
+			}
+			for _, iface := range chunk {
+				if !includes(ifaces, iface) {
+					ifaces = append(ifaces, iface)
+				}
+			}
 		}
-		b, err = introspect(sessionFlag, destFlag, dbus.ObjectPath(pathFlag))
 	} else {
-		b, err = ioutil.ReadAll(os.Stdin)
+		b, err := ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			return err
+		}
+		ifaces, err = parser.Parse(b)
+		if err != nil {
+			return err
+		}
 	}
-	if err != nil {
-		return err
-	}
-	ifaces, err := parser.Parse(b)
-	if err != nil {
-		return err
-	}
+
 	// TODO: split(ifaceFlag)
 	return printer.Print(os.Stdout, packageFlag, ifaces)
+}
+
+func includes(ifaces []*token.Interface, iface *token.Interface) bool {
+	for i := range ifaces {
+		if ifaces[i].Name == iface.Name {
+			return true
+		}
+	}
+	return false
 }
 
 func split(s string) []string {
