@@ -43,9 +43,12 @@ func Print(out io.Writer, pkgName string, ifaces []*token.Interface) error {
 		}
 	}
 	if haveSignals(ifaces) {
-		if err := writeSignalFuncs(buf, ifaces); err != nil {
+		if err := writeSignalLookup(buf, ifaces); err != nil {
 			return err
 		}
+	}
+	if err := writeInterfaceLookup(buf, ifaces); err != nil {
+		return err
 	}
 
 	//fmt.Println(string(buf.bytes()))
@@ -133,6 +136,11 @@ type %s struct {
 		iface.Type,
 	)
 
+	buf.writef(`func(o *%s) obj() dbus.BusObject {
+	return o.object
+}
+`, iface.Type)
+
 	for _, method := range iface.Methods {
 		buf.writef(`// %s calls %s.%s method.
 func(o *%s) %s(%s) (%serr error) {
@@ -207,7 +215,7 @@ func (s *%s) Body() %sBody {
 	return nil
 }
 
-func writeSignalFuncs(buf *buffer, ifaces []*token.Interface) error {
+func writeSignalLookup(buf *buffer, ifaces []*token.Interface) error {
 	buf.writef(`// Signal is a common interface for all signals.
 type Signal interface {
 	Name() string
@@ -216,7 +224,7 @@ type Signal interface {
 	Path() dbus.ObjectPath
 }
 `)
-	buf.writef(`// LookupSignal converts the given raw DBus signal into typed one.
+	buf.writef(`// LookupSignal converts the given raw DBus signal into typed one or returns nil.
 func LookupSignal(signal *dbus.Signal) Signal {
 	switch signal.Name {
 `)
@@ -234,6 +242,30 @@ func LookupSignal(signal *dbus.Signal) Signal {
 			buf.writeln("			},")
 			buf.writeln("		}")
 		}
+	}
+	buf.writef(`	default:
+		return nil
+	}
+}
+`)
+	return nil
+}
+
+func writeInterfaceLookup(buf *buffer, ifaces []*token.Interface) error {
+	buf.writef(`// Interface is a DBus interface implementation.
+type Interface interface {
+	obj() dbus.BusObject
+}
+`)
+
+	buf.writef(`// LookupInterface returns an interface for the named object.
+func LookupInterface(conn *dbus.Conn, dest string, path dbus.ObjectPath, iface string) Interface {
+	switch iface {
+`)
+	for _, iface := range ifaces {
+		buf.writef(`case "%s":
+	return New%s(conn, dest, path)
+`, iface.Name, iface.Type)
 	}
 	buf.writef(`	default:
 		return nil
