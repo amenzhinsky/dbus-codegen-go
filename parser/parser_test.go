@@ -29,6 +29,7 @@ func TestParseArg(t *testing.T) {
 		{"camel___case", "s", "in", 2, false, token.Arg{Name: "camelCase", Type: "string"}},
 		{"CamelCase", "s", "out", 3, false, token.Arg{Name: "camelCase", Type: "string"}},
 		{"exportVar", "s", "out", 4, true, token.Arg{Name: "ExportVar", Type: "string"}},
+		{"Type", "s", "out", 5, false, token.Arg{Name: "outType", Type: "string"}},
 	} {
 		if have := parseArg(
 			run.identifier, run.signature, run.prefix, run.i, run.export,

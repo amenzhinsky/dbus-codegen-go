@@ -49,6 +49,8 @@ func Print(out io.Writer, pkgName string, ifaces []*token.Interface) error {
 		}
 	}
 
+	//fmt.Println(string(buf.bytes()))
+
 	// gofmt code
 	b, err := format.Source(buf.bytes())
 	if err != nil {

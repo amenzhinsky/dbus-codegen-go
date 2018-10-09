@@ -67,8 +67,6 @@ func parseArg(identifier, signature string, prefix string, i int, export bool) *
 	var name string
 	if identifier == "" {
 		name = prefix + strconv.Itoa(i)
-	} else if isKeyword(identifier) {
-		name = prefix + strings.Title(identifier)
 	} else {
 		name = strings.ToLower(identifier[:1]) +
 			varRegexp.ReplaceAllStringFunc(identifier[1:], func(s string) string {
@@ -77,6 +75,9 @@ func parseArg(identifier, signature string, prefix string, i int, export bool) *
 	}
 	if export {
 		name = strings.Title(name)
+	}
+	if isKeyword(name) {
+		name = prefix + strings.Title(name)
 	}
 	return &token.Arg{Name: name, Type: parseSignature(signature)[0]}
 }
