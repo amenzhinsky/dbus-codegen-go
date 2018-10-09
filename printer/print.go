@@ -18,8 +18,10 @@ func (b *buffer) writef(format string, v ...interface{}) (int, error) {
 	return fmt.Fprintf(&b.buf, format, v...)
 }
 
-func (b *buffer) writeln(s string) {
-	b.buf.WriteString(s)
+func (b *buffer) writeln(s ...string) {
+	for i := 0; i < len(s); i++ {
+		b.buf.WriteString(s[i])
+	}
 	b.buf.WriteByte('\n')
 }
 
@@ -60,31 +62,28 @@ func writeHeader(buf *buffer, pkgName string, ifaces []*token.Interface) error {
 		if i != 0 {
 			buf.writeln("//")
 		}
-		buf.writef("// %s\n", iface.Name)
+		buf.writeln("// ", iface.Name)
 		if len(iface.Methods) != 0 {
 			buf.writeln("//   Methods")
 			for _, method := range iface.Methods {
-				buf.writef("//     %s\n", method.Name)
+				buf.writeln("//     ", method.Name)
 			}
 		}
 		if len(iface.Properties) != 0 {
 			buf.writeln("//   Properties")
 			for _, prop := range iface.Properties {
-				buf.writef("//     %s\n", prop.Name)
+				buf.writeln("//     ", prop.Name)
 			}
 		}
 		if len(iface.Signals) != 0 {
 			buf.writeln("//   Signals")
 			for _, sig := range iface.Signals {
-				buf.writef("//     %s\n", sig.Name)
+				buf.writeln("//     ", sig.Name)
 			}
 		}
 	}
-	buf.writef(`package %s
-
-import "github.com/godbus/dbus"
-
-`, pkgName)
+	buf.writeln("package ", pkgName)
+	buf.writeln(`import "github.com/godbus/dbus"`)
 	return nil
 }
 
@@ -93,14 +92,15 @@ func writeIface(buf *buffer, iface *token.Interface, signals map[string][]*token
 func New%s(conn *dbus.Conn, dest string, path dbus.ObjectPath) *%s {
 	return &%s{conn.Object(dest, path)}
 }
-
 `, iface.Type, iface.Name, iface.Type, iface.Type, iface.Type)
 	buf.writef(`// %s implements %s DBus interface.
 type %s struct {
 	object dbus.BusObject
 }
-
-`, iface.Type, iface.Name, iface.Type)
+`,
+		iface.Type, iface.Name,
+		iface.Type,
+	)
 
 	for _, method := range iface.Methods {
 		buf.writef(`// %s calls %s.%s method.
@@ -108,7 +108,6 @@ func(o *%s) %s(%s) (%serr error) {
 	err = o.object.Call("%s", 0, %s).Store(%s)
 	return
 }
-
 `,
 			iface.Type, iface.Name, method.Name,
 			iface.Type, method.Type, joinArgs(method.In, ','), joinArgs(method.Out, ','),
@@ -123,7 +122,6 @@ func(o *%s) %s() (%s %s, err error) {
 	o.object.Call("org.freedesktop.DBus.Properties.Get", 0, "%s", "%s").Store(&%s)
 	return
 }
-
 `,
 				prop.Type, iface.Name, prop.Name,
 				iface.Type, prop.Type, prop.Arg.Name, prop.Arg.Type,
@@ -189,7 +187,6 @@ type Signal interface {
 	Sender() string
 	Path() dbus.ObjectPath
 }
-
 `)
 	buf.writef(`// LookupSignal converts the given raw DBus signal into typed one.
 func LookupSignal(signal *dbus.Signal) Signal {
