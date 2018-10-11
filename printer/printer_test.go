@@ -9,7 +9,7 @@ import (
 
 func TestPrint(t *testing.T) {
 	var buf bytes.Buffer
-	if err := Print(&buf, "main", []*token.Interface{
+	if err := Print(&buf, []*token.Interface{
 		{
 			Type:       "FooOrg",
 			Name:       "foo.org",

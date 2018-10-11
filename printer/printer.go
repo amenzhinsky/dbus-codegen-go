@@ -1,40 +1,49 @@
 package printer
 
 import (
-	"bytes"
-	"fmt"
+	"errors"
 	"go/format"
 	"io"
+	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/amenzhinsky/godbus-codegen/token"
 )
 
-type buffer struct {
-	buf bytes.Buffer
+var identRegexp = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9_]*$")
+
+type PrintOption func(p *printer)
+
+type printer struct {
+	pkgName  string
+	prefixes []string
 }
 
-func (b *buffer) writef(format string, v ...interface{}) (int, error) {
-	return fmt.Fprintf(&b.buf, format, v...)
-}
-
-func (b *buffer) writeln(s ...string) {
-	for i := 0; i < len(s); i++ {
-		b.buf.WriteString(s[i])
+func WithPackageName(name string) PrintOption {
+	return func(p *printer) {
+		p.pkgName = name
 	}
-	b.buf.WriteByte('\n')
 }
 
-func (b *buffer) bytes() []byte {
-	return b.buf.Bytes()
-}
+func Print(out io.Writer, ifaces []*token.Interface, opts ...PrintOption) error {
+	p := &printer{
+		pkgName: "dbusgen",
+	}
+	for _, opt := range opts {
+		opt(p)
+	}
+	if !identRegexp.MatchString(p.pkgName) {
+		return errors.New("package name is not valid")
+	}
+	if len(ifaces) == 0 {
+		return errors.New("no interfaces given")
+	}
 
-func Print(out io.Writer, pkgName string, ifaces []*token.Interface) error {
-	buf := &buffer{}
+	buf := newBuffer()
 
 	sortAll(ifaces)
-	writeHeader(buf, pkgName, ifaces)
+	writeHeader(buf, p.pkgName, ifaces)
 	writeInterfaceLookup(buf, ifaces)
 	if haveSignals(ifaces) {
 		writeSignalLookup(buf, ifaces)
@@ -213,7 +222,7 @@ func (s *%s) Body() %sBody {
 	return s.body
 }
 `,
-			sig.Type, sig.Name, iface.Name,
+			sig.Type, iface.Name, sig.Name,
 			sig.Type, sig.Type, sig.Type, joinArgs(sig.Args, ';'),
 			sig.Type, sig.Name, sig.Type, iface.Name, sig.Type, sig.Type,
 			sig.Type, sig.Type,

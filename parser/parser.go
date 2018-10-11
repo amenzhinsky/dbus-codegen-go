@@ -16,6 +16,13 @@ func Parse(b []byte) ([]*token.Interface, error) {
 	if err := xml.Unmarshal(b, &node); err != nil {
 		return nil, err
 	}
+	return ParseNode(&node)
+}
+
+func ParseNode(node *introspect.Node) ([]*token.Interface, error) {
+	if node == nil {
+		panic("node is nil")
+	}
 	var ifaces []*token.Interface
 	for _, iface := range node.Interfaces {
 		typ := ifaceToType(iface.Name)

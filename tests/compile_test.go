@@ -19,10 +19,10 @@ func TestOutputHashSum(t *testing.T) {
 	ifaces := parse(t, "org.freedesktop.DBus.xml")
 	hash1 := sha256.New()
 	hash2 := sha256.New()
-	if err := printer.Print(hash1, "main", ifaces); err != nil {
+	if err := printer.Print(hash1, ifaces); err != nil {
 		t.Fatal(err)
 	}
-	if err := printer.Print(hash2, "main", ifaces); err != nil {
+	if err := printer.Print(hash2, ifaces); err != nil {
 		t.Fatal(err)
 	}
 	if !reflect.DeepEqual(hash1.Sum(nil), hash2.Sum(nil)) {
@@ -74,7 +74,7 @@ func compile(ifaces []*token.Interface, goFile string) error {
 	if err != nil {
 		return err
 	}
-	if err = printer.Print(f, "main", ifaces); err != nil {
+	if err = printer.Print(f, ifaces, printer.WithPackageName("main")); err != nil {
 		return err
 	}
 	defer f.Close()
