@@ -34,7 +34,7 @@ func TestCompile(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
-	for _, tc := range [][]string{
+	for _, tc := range [][2]string{
 		{"test_signal.gof", "org.freedesktop.DBus.xml"},
 		{"test_single_method.gof", "org.freedesktop.DBus.xml"},
 		{"test_properties.gof", "org.freedesktop.DBus.xml"},
@@ -42,9 +42,9 @@ func TestCompile(t *testing.T) {
 		tc := tc
 		t.Run(tc[0], func(t *testing.T) {
 			t.Parallel()
-			ifaces := parse(t, tc.xml)
+			ifaces := parse(t, tc[1])
 			if err := compile(ifaces, tc[0]); err != nil {
-				t.Errorf("compile(%q, %q) error: %s", tc[0], tc[1:], err)
+				t.Errorf("compile(%q, %q) error: %s", tc[0], tc[1], err)
 			}
 		})
 	}

@@ -23,6 +23,7 @@ var (
 	sessionFlag bool
 	packageFlag string
 	gofmtFlag   bool
+	xmlFlag     bool
 )
 
 type stringsFlag []string
@@ -57,6 +58,7 @@ Flags:
 	flag.BoolVar(&sessionFlag, "session", false, "connect to the session bus instead of the system")
 	flag.StringVar(&packageFlag, "package", "dbusgen", "generated package name")
 	flag.BoolVar(&gofmtFlag, "gofmt", true, "gofmt results")
+	flag.BoolVar(&xmlFlag, "xml", false, "combine the dest's introspections into a single document")
 	flag.Parse()
 
 	if err := run(); err != nil {
@@ -77,7 +79,15 @@ func run() error {
 		}
 		defer conn.Close()
 
-		ifaces, err = parseDest(conn, destFlag, "/")
+		if xmlFlag {
+			b, err := generateXml(conn, destFlag)
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(b))
+			return nil
+		}
+		ifaces, err = parseDest(conn, destFlag)
 		if err != nil {
 			return err
 		}
@@ -128,24 +138,45 @@ func connect(session bool) (*dbus.Conn, error) {
 	return dbus.SystemBus()
 }
 
-func parseDest(conn *dbus.Conn, dest string, path dbus.ObjectPath) (
-	[]*token.Interface, error,
-) {
-	ifaces, children, err := introspectPath(conn, destFlag, path)
+func parseDest(conn *dbus.Conn, dest string) ([]*token.Interface, error) {
+	ifaces := make([]*token.Interface, 0, 16)
+	if err := introspectDest(conn, dest, "/", func(node *introspect.Node) error {
+		chunk, err := parser.ParseNode(node)
+		if err != nil {
+			return err
+		}
+		ifaces = merge(ifaces, chunk)
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return ifaces, nil
+}
+
+func generateXml(conn *dbus.Conn, dest string) ([]byte, error) {
+	var node introspect.Node
+	if err := introspectDest(conn, dest, "/", func(n *introspect.Node) error {
+		for _, iface := range n.Interfaces {
+			var found bool
+			for _, ifc := range node.Interfaces {
+				if ifc.Name == iface.Name {
+					found = true
+					break
+				}
+			}
+			if !found {
+				node.Interfaces = append(node.Interfaces, iface)
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	b, err := xml.MarshalIndent(&node, "", "\t")
 	if err != nil {
 		return nil, err
 	}
-	if path == "/" {
-		path = ""
-	}
-	for _, child := range children {
-		chunk, err := parseDest(conn, dest, path+dbus.ObjectPath("/"+child.Name))
-		if err != nil {
-			return nil, err
-		}
-		ifaces = merge(ifaces, chunk)
-	}
-	return ifaces, nil
+	return b, nil
 }
 
 func merge(curr, next []*token.Interface) []*token.Interface {
@@ -173,22 +204,30 @@ func includes(ss []string, s string) bool {
 	return false
 }
 
-func introspectPath(conn *dbus.Conn, dest string, path dbus.ObjectPath) (
-	[]*token.Interface, []introspect.Node, error,
-) {
+func introspectDest(
+	conn *dbus.Conn, dest string, path dbus.ObjectPath,
+	fn func(node *introspect.Node) error,
+) error {
 	var s string
 	if err := conn.Object(dest, path).Call(
 		"org.freedesktop.DBus.Introspectable.Introspect", 0,
 	).Store(&s); err != nil {
-		return nil, nil, err
+		return err
 	}
 	var node introspect.Node
 	if err := xml.Unmarshal([]byte(s), &node); err != nil {
-		return nil, nil, err
+		return err
 	}
-	ifaces, err := parser.ParseNode(&node)
-	if err != nil {
-		return nil, nil, err
+	if err := fn(&node); err != nil {
+		return err
 	}
-	return ifaces, node.Children, nil
+	if path == "/" {
+		path = ""
+	}
+	for _, child := range node.Children {
+		if err := introspectDest(conn, dest, path+"/"+dbus.ObjectPath(child.Name), fn); err != nil {
+			return err
+		}
+	}
+	return nil
 }
