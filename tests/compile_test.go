@@ -38,6 +38,14 @@ func TestCompile(t *testing.T) {
 		{"test_signal.gof", "org.freedesktop.DBus.xml"},
 		{"test_single_method.gof", "org.freedesktop.DBus.xml"},
 		{"test_properties.gof", "org.freedesktop.DBus.xml"},
+
+		{"test_it_compiles.gof", "net.connman.iwd.xml"},
+		{"test_it_compiles.gof", "org.freedesktop.DBus.xml"},
+		{"test_it_compiles.gof", "org.freedesktop.Accounts.xml"},
+		{"test_it_compiles.gof", "org.freedesktop.UDisks2.xml"},
+		{"test_it_compiles.gof", "org.freedesktop.systemd1.xml"},
+
+		// TODO: {"test_it_compiles.gof", "org.freedesktop.NetworkManager.xml"},
 	} {
 		tc := tc
 		t.Run(tc[0], func(t *testing.T) {

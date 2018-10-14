@@ -200,7 +200,7 @@ func (o *%s) %s(%s) (%serr error) {
 
 func writeProperties(buf *buffer, iface *token.Interface) {
 	for _, prop := range iface.Properties {
-		if prop.Read {
+		if prop.Read && !ifaceHasMethod(iface, propGetType(prop)) {
 			buf.writef(`// %s gets %s.%s property.
 func (o *%s) %s() (%s %s, err error) {
 	err = o.object.Call(methodPropertyGet, 0, %s, "%s").Store(&%s)
@@ -212,7 +212,7 @@ func (o *%s) %s() (%s %s, err error) {
 				ifaceNameConst(iface), prop.Name, prop.Arg.Name,
 			)
 		}
-		if prop.Write {
+		if prop.Write && !ifaceHasMethod(iface, propSetType(prop)) {
 			buf.writef(`// %s sets %s.%s property.
 func (o *%s) %s(%s %s) error {
 	return o.object.Call(methodPropertySet, 0, %s, "%s", %s).Store()
@@ -224,6 +224,15 @@ func (o *%s) %s(%s %s) error {
 			)
 		}
 	}
+}
+
+func ifaceHasMethod(iface *token.Interface, name string) bool {
+	for _, method := range iface.Methods {
+		if method.Name == name {
+			return true
+		}
+	}
+	return false
 }
 
 func propGetType(prop *token.Property) string {

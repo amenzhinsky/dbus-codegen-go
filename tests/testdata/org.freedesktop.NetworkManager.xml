@@ -1,0 +1,436 @@
+<node>
+	<interface name="org.freedesktop.DBus.Properties">
+		<method name="Get">
+			<arg name="interface_name" type="s" direction="in"></arg>
+			<arg name="property_name" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="out"></arg>
+		</method>
+		<method name="GetAll">
+			<arg name="interface_name" type="s" direction="in"></arg>
+			<arg name="properties" type="a{sv}" direction="out"></arg>
+		</method>
+		<method name="Set">
+			<arg name="interface_name" type="s" direction="in"></arg>
+			<arg name="property_name" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="in"></arg>
+		</method>
+		<signal name="PropertiesChanged">
+			<arg name="interface_name" type="s"></arg>
+			<arg name="changed_properties" type="a{sv}"></arg>
+			<arg name="invalidated_properties" type="as"></arg>
+		</signal>
+	</interface>
+	<interface name="org.freedesktop.DBus.Introspectable">
+		<method name="Introspect">
+			<arg name="xml_data" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.Peer">
+		<method name="Ping"></method>
+		<method name="GetMachineId">
+			<arg name="machine_uuid" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.ObjectManager">
+		<method name="GetManagedObjects">
+			<arg name="object_paths_interfaces_and_properties" type="a{oa{sa{sv}}}" direction="out"></arg>
+		</method>
+		<signal name="InterfacesAdded">
+			<arg name="object_path" type="o"></arg>
+			<arg name="interfaces_and_properties" type="a{sa{sv}}"></arg>
+		</signal>
+		<signal name="InterfacesRemoved">
+			<arg name="object_path" type="o"></arg>
+			<arg name="interfaces" type="as"></arg>
+		</signal>
+	</interface>
+	<interface name="org.freedesktop.NetworkManager">
+		<method name="Reload">
+			<arg name="flags" type="u" direction="in"></arg>
+		</method>
+		<method name="GetDevices">
+			<arg name="devices" type="ao" direction="out"></arg>
+		</method>
+		<method name="GetAllDevices">
+			<arg name="devices" type="ao" direction="out"></arg>
+		</method>
+		<method name="GetDeviceByIpIface">
+			<arg name="iface" type="s" direction="in"></arg>
+			<arg name="device" type="o" direction="out"></arg>
+		</method>
+		<method name="ActivateConnection">
+			<arg name="connection" type="o" direction="in"></arg>
+			<arg name="device" type="o" direction="in"></arg>
+			<arg name="specific_object" type="o" direction="in"></arg>
+			<arg name="active_connection" type="o" direction="out"></arg>
+		</method>
+		<method name="AddAndActivateConnection">
+			<arg name="connection" type="a{sa{sv}}" direction="in"></arg>
+			<arg name="device" type="o" direction="in"></arg>
+			<arg name="specific_object" type="o" direction="in"></arg>
+			<arg name="path" type="o" direction="out"></arg>
+			<arg name="active_connection" type="o" direction="out"></arg>
+		</method>
+		<method name="DeactivateConnection">
+			<arg name="active_connection" type="o" direction="in"></arg>
+		</method>
+		<method name="Sleep">
+			<arg name="sleep" type="b" direction="in"></arg>
+		</method>
+		<method name="Enable">
+			<arg name="enable" type="b" direction="in"></arg>
+		</method>
+		<method name="GetPermissions">
+			<arg name="permissions" type="a{ss}" direction="out"></arg>
+		</method>
+		<method name="SetLogging">
+			<arg name="level" type="s" direction="in"></arg>
+			<arg name="domains" type="s" direction="in"></arg>
+		</method>
+		<method name="GetLogging">
+			<arg name="level" type="s" direction="out"></arg>
+			<arg name="domains" type="s" direction="out"></arg>
+		</method>
+		<method name="CheckConnectivity">
+			<arg name="connectivity" type="u" direction="out"></arg>
+		</method>
+		<method name="state">
+			<arg name="state" type="u" direction="out"></arg>
+		</method>
+		<method name="CheckpointCreate">
+			<arg name="devices" type="ao" direction="in"></arg>
+			<arg name="rollback_timeout" type="u" direction="in"></arg>
+			<arg name="flags" type="u" direction="in"></arg>
+			<arg name="checkpoint" type="o" direction="out"></arg>
+		</method>
+		<method name="CheckpointDestroy">
+			<arg name="checkpoint" type="o" direction="in"></arg>
+		</method>
+		<method name="CheckpointRollback">
+			<arg name="checkpoint" type="o" direction="in"></arg>
+			<arg name="result" type="a{su}" direction="out"></arg>
+		</method>
+		<method name="CheckpointAdjustRollbackTimeout">
+			<arg name="checkpoint" type="o" direction="in"></arg>
+			<arg name="add_timeout" type="u" direction="in"></arg>
+		</method>
+		<signal name="PropertiesChanged">
+			<arg name="properties" type="a{sv}"></arg>
+		</signal>
+		<signal name="CheckPermissions"></signal>
+		<signal name="StateChanged">
+			<arg name="state" type="u"></arg>
+		</signal>
+		<signal name="DeviceAdded">
+			<arg name="device_path" type="o"></arg>
+		</signal>
+		<signal name="DeviceRemoved">
+			<arg name="device_path" type="o"></arg>
+		</signal>
+		<property name="Devices" type="ao" access="read"></property>
+		<property name="AllDevices" type="ao" access="read"></property>
+		<property name="Checkpoints" type="ao" access="read"></property>
+		<property name="NetworkingEnabled" type="b" access="read"></property>
+		<property name="WirelessEnabled" type="b" access="readwrite"></property>
+		<property name="WirelessHardwareEnabled" type="b" access="read"></property>
+		<property name="WwanEnabled" type="b" access="readwrite"></property>
+		<property name="WwanHardwareEnabled" type="b" access="read"></property>
+		<property name="WimaxEnabled" type="b" access="readwrite"></property>
+		<property name="WimaxHardwareEnabled" type="b" access="read"></property>
+		<property name="ActiveConnections" type="ao" access="read"></property>
+		<property name="PrimaryConnection" type="o" access="read"></property>
+		<property name="PrimaryConnectionType" type="s" access="read"></property>
+		<property name="Metered" type="u" access="read"></property>
+		<property name="ActivatingConnection" type="o" access="read"></property>
+		<property name="Startup" type="b" access="read"></property>
+		<property name="Version" type="s" access="read"></property>
+		<property name="Capabilities" type="u" access="read"></property>
+		<property name="State" type="u" access="read"></property>
+		<property name="Connectivity" type="u" access="read"></property>
+		<property name="ConnectivityCheckAvailable" type="b" access="read"></property>
+		<property name="ConnectivityCheckEnabled" type="b" access="readwrite"></property>
+		<property name="GlobalDnsConfiguration" type="a{sv}" access="readwrite"></property>
+	</interface>
+	<interface name="org.freedesktop.NetworkManager.DnsManager">
+		<property name="Mode" type="s" access="read"></property>
+		<property name="RcManager" type="s" access="read"></property>
+		<property name="Configuration" type="aa{sv}" access="read"></property>
+	</interface>
+	<interface name="org.freedesktop.NetworkManager.DHCP4Config">
+		<signal name="PropertiesChanged">
+			<arg name="properties" type="a{sv}"></arg>
+		</signal>
+		<property name="Options" type="a{sv}" access="read"></property>
+	</interface>
+	<interface name="org.freedesktop.NetworkManager.Connection.Active">
+		<signal name="PropertiesChanged">
+			<arg name="properties" type="a{sv}"></arg>
+		</signal>
+		<signal name="StateChanged">
+			<arg name="state" type="u"></arg>
+			<arg name="reason" type="u"></arg>
+		</signal>
+		<property name="Connection" type="o" access="read"></property>
+		<property name="SpecificObject" type="o" access="read"></property>
+		<property name="Id" type="s" access="read"></property>
+		<property name="Uuid" type="s" access="read"></property>
+		<property name="Type" type="s" access="read"></property>
+		<property name="Devices" type="ao" access="read"></property>
+		<property name="State" type="u" access="read"></property>
+		<property name="StateFlags" type="u" access="read"></property>
+		<property name="Default" type="b" access="read"></property>
+		<property name="Ip4Config" type="o" access="read"></property>
+		<property name="Dhcp4Config" type="o" access="read"></property>
+		<property name="Default6" type="b" access="read"></property>
+		<property name="Ip6Config" type="o" access="read"></property>
+		<property name="Dhcp6Config" type="o" access="read"></property>
+		<property name="Vpn" type="b" access="read"></property>
+		<property name="Master" type="o" access="read"></property>
+	</interface>
+	<interface name="org.freedesktop.NetworkManager.AccessPoint">
+		<signal name="PropertiesChanged">
+			<arg name="properties" type="a{sv}"></arg>
+		</signal>
+		<property name="Flags" type="u" access="read"></property>
+		<property name="WpaFlags" type="u" access="read"></property>
+		<property name="RsnFlags" type="u" access="read"></property>
+		<property name="Ssid" type="ay" access="read"></property>
+		<property name="Frequency" type="u" access="read"></property>
+		<property name="HwAddress" type="s" access="read"></property>
+		<property name="Mode" type="u" access="read"></property>
+		<property name="MaxBitrate" type="u" access="read"></property>
+		<property name="Strength" type="y" access="read"></property>
+		<property name="LastSeen" type="i" access="read"></property>
+	</interface>
+	<interface name="org.freedesktop.NetworkManager.Device">
+		<method name="Reapply">
+			<arg name="connection" type="a{sa{sv}}" direction="in"></arg>
+			<arg name="version_id" type="t" direction="in"></arg>
+			<arg name="flags" type="u" direction="in"></arg>
+		</method>
+		<method name="GetAppliedConnection">
+			<arg name="flags" type="u" direction="in"></arg>
+			<arg name="connection" type="a{sa{sv}}" direction="out"></arg>
+			<arg name="version_id" type="t" direction="out"></arg>
+		</method>
+		<method name="Disconnect"></method>
+		<method name="Delete"></method>
+		<signal name="StateChanged">
+			<arg name="new_state" type="u"></arg>
+			<arg name="old_state" type="u"></arg>
+			<arg name="reason" type="u"></arg>
+		</signal>
+		<property name="Udi" type="s" access="read"></property>
+		<property name="Interface" type="s" access="read"></property>
+		<property name="IpInterface" type="s" access="read"></property>
+		<property name="Driver" type="s" access="read"></property>
+		<property name="DriverVersion" type="s" access="read"></property>
+		<property name="FirmwareVersion" type="s" access="read"></property>
+		<property name="Capabilities" type="u" access="read"></property>
+		<property name="Ip4Address" type="u" access="read"></property>
+		<property name="State" type="u" access="read"></property>
+		<property name="StateReason" type="(uu)" access="read"></property>
+		<property name="ActiveConnection" type="o" access="read"></property>
+		<property name="Ip4Config" type="o" access="read"></property>
+		<property name="Dhcp4Config" type="o" access="read"></property>
+		<property name="Ip6Config" type="o" access="read"></property>
+		<property name="Dhcp6Config" type="o" access="read"></property>
+		<property name="Managed" type="b" access="readwrite"></property>
+		<property name="Autoconnect" type="b" access="readwrite"></property>
+		<property name="FirmwareMissing" type="b" access="read"></property>
+		<property name="NmPluginMissing" type="b" access="read"></property>
+		<property name="DeviceType" type="u" access="read"></property>
+		<property name="AvailableConnections" type="ao" access="read"></property>
+		<property name="PhysicalPortId" type="s" access="read"></property>
+		<property name="Mtu" type="u" access="read"></property>
+		<property name="Metered" type="u" access="read"></property>
+		<property name="LldpNeighbors" type="aa{sv}" access="read"></property>
+		<property name="Real" type="b" access="read"></property>
+	</interface>
+	<interface name="org.freedesktop.NetworkManager.Device.Bridge">
+		<signal name="PropertiesChanged">
+			<arg name="properties" type="a{sv}"></arg>
+		</signal>
+		<property name="HwAddress" type="s" access="read"></property>
+		<property name="Carrier" type="b" access="read"></property>
+		<property name="Slaves" type="ao" access="read"></property>
+	</interface>
+	<interface name="org.freedesktop.NetworkManager.Device.Statistics">
+		<signal name="PropertiesChanged">
+			<arg name="properties" type="a{sv}"></arg>
+		</signal>
+		<property name="RefreshRateMs" type="u" access="readwrite"></property>
+		<property name="TxBytes" type="t" access="read"></property>
+		<property name="RxBytes" type="t" access="read"></property>
+	</interface>
+	<interface name="org.freedesktop.NetworkManager.Device.Wireless">
+		<method name="GetAccessPoints">
+			<arg name="access_points" type="ao" direction="out"></arg>
+		</method>
+		<method name="GetAllAccessPoints">
+			<arg name="access_points" type="ao" direction="out"></arg>
+		</method>
+		<method name="RequestScan">
+			<arg name="options" type="a{sv}" direction="in"></arg>
+		</method>
+		<signal name="PropertiesChanged">
+			<arg name="properties" type="a{sv}"></arg>
+		</signal>
+		<signal name="AccessPointAdded">
+			<arg name="access_point" type="o"></arg>
+		</signal>
+		<signal name="AccessPointRemoved">
+			<arg name="access_point" type="o"></arg>
+		</signal>
+		<property name="HwAddress" type="s" access="read"></property>
+		<property name="PermHwAddress" type="s" access="read"></property>
+		<property name="Mode" type="u" access="read"></property>
+		<property name="Bitrate" type="u" access="read"></property>
+		<property name="AccessPoints" type="ao" access="read"></property>
+		<property name="ActiveAccessPoint" type="o" access="read"></property>
+		<property name="WirelessCapabilities" type="u" access="read"></property>
+		<property name="LastScan" type="x" access="read"></property>
+	</interface>
+	<interface name="org.freedesktop.NetworkManager.Device.Generic">
+		<signal name="PropertiesChanged">
+			<arg name="properties" type="a{sv}"></arg>
+		</signal>
+		<property name="HwAddress" type="s" access="read"></property>
+		<property name="TypeDescription" type="s" access="read"></property>
+	</interface>
+	<interface name="org.freedesktop.NetworkManager.AgentManager">
+		<method name="Register">
+			<arg name="identifier" type="s" direction="in"></arg>
+		</method>
+		<method name="RegisterWithCapabilities">
+			<arg name="identifier" type="s" direction="in"></arg>
+			<arg name="capabilities" type="u" direction="in"></arg>
+		</method>
+		<method name="Unregister"></method>
+	</interface>
+	<interface name="org.freedesktop.NetworkManager.Settings">
+		<method name="ListConnections">
+			<arg name="connections" type="ao" direction="out"></arg>
+		</method>
+		<method name="GetConnectionByUuid">
+			<arg name="uuid" type="s" direction="in"></arg>
+			<arg name="connection" type="o" direction="out"></arg>
+		</method>
+		<method name="AddConnection">
+			<arg name="connection" type="a{sa{sv}}" direction="in"></arg>
+			<arg name="path" type="o" direction="out"></arg>
+		</method>
+		<method name="AddConnectionUnsaved">
+			<arg name="connection" type="a{sa{sv}}" direction="in"></arg>
+			<arg name="path" type="o" direction="out"></arg>
+		</method>
+		<method name="LoadConnections">
+			<arg name="filenames" type="as" direction="in"></arg>
+			<arg name="status" type="b" direction="out"></arg>
+			<arg name="failures" type="as" direction="out"></arg>
+		</method>
+		<method name="ReloadConnections">
+			<arg name="status" type="b" direction="out"></arg>
+		</method>
+		<method name="SaveHostname">
+			<arg name="hostname" type="s" direction="in"></arg>
+		</method>
+		<signal name="PropertiesChanged">
+			<arg name="properties" type="a{sv}"></arg>
+		</signal>
+		<signal name="NewConnection">
+			<arg name="connection" type="o"></arg>
+		</signal>
+		<signal name="ConnectionRemoved">
+			<arg name="connection" type="o"></arg>
+		</signal>
+		<property name="Connections" type="ao" access="read"></property>
+		<property name="Hostname" type="s" access="read"></property>
+		<property name="CanModify" type="b" access="read"></property>
+	</interface>
+	<interface name="org.freedesktop.NetworkManager.Settings.Connection">
+		<method name="Update">
+			<arg name="properties" type="a{sa{sv}}" direction="in"></arg>
+		</method>
+		<method name="UpdateUnsaved">
+			<arg name="properties" type="a{sa{sv}}" direction="in"></arg>
+		</method>
+		<method name="Delete"></method>
+		<method name="GetSettings">
+			<arg name="settings" type="a{sa{sv}}" direction="out"></arg>
+		</method>
+		<method name="GetSecrets">
+			<arg name="setting_name" type="s" direction="in"></arg>
+			<arg name="secrets" type="a{sa{sv}}" direction="out"></arg>
+		</method>
+		<method name="ClearSecrets"></method>
+		<method name="Save"></method>
+		<method name="Update2">
+			<arg name="settings" type="a{sa{sv}}" direction="in"></arg>
+			<arg name="flags" type="u" direction="in"></arg>
+			<arg name="args" type="a{sv}" direction="in"></arg>
+			<arg name="result" type="a{sv}" direction="out"></arg>
+		</method>
+		<signal name="PropertiesChanged">
+			<arg name="properties" type="a{sv}"></arg>
+		</signal>
+		<signal name="Updated"></signal>
+		<signal name="Removed"></signal>
+		<property name="Unsaved" type="b" access="read"></property>
+		<property name="Flags" type="u" access="read"></property>
+		<property name="Filename" type="s" access="read"></property>
+	</interface>
+	<interface name="org.freedesktop.NetworkManager.IP6Config">
+		<signal name="PropertiesChanged">
+			<arg name="properties" type="a{sv}"></arg>
+		</signal>
+		<property name="Addresses" type="a(ayuay)" access="read"></property>
+		<property name="AddressData" type="aa{sv}" access="read"></property>
+		<property name="Gateway" type="s" access="read"></property>
+		<property name="Routes" type="a(ayuayu)" access="read"></property>
+		<property name="RouteData" type="aa{sv}" access="read"></property>
+		<property name="Nameservers" type="aay" access="read"></property>
+		<property name="Domains" type="as" access="read"></property>
+		<property name="Searches" type="as" access="read"></property>
+		<property name="DnsOptions" type="as" access="read"></property>
+		<property name="DnsPriority" type="i" access="read"></property>
+	</interface>
+	<interface name="org.freedesktop.NetworkManager.IP4Config">
+		<signal name="PropertiesChanged">
+			<arg name="properties" type="a{sv}"></arg>
+		</signal>
+		<property name="Addresses" type="aau" access="read"></property>
+		<property name="AddressData" type="aa{sv}" access="read"></property>
+		<property name="Gateway" type="s" access="read"></property>
+		<property name="Routes" type="aau" access="read"></property>
+		<property name="RouteData" type="aa{sv}" access="read"></property>
+		<property name="NameserverData" type="aa{sv}" access="read"></property>
+		<property name="Nameservers" type="au" access="read"></property>
+		<property name="Domains" type="as" access="read"></property>
+		<property name="Searches" type="as" access="read"></property>
+		<property name="DnsOptions" type="as" access="read"></property>
+		<property name="DnsPriority" type="i" access="read"></property>
+		<property name="WinsServerData" type="as" access="read"></property>
+		<property name="WinsServers" type="au" access="read"></property>
+	</interface>
+	<interface name="net.connman.iwd.Agent">
+		<method name="RequestPassphrase">
+			<arg name="network" type="o" direction="in"></arg>
+			<arg name="passphrase" type="s" direction="out"></arg>
+		</method>
+		<method name="RequestPrivateKeyPassphrase">
+			<arg name="network" type="o" direction="in"></arg>
+			<arg name="passphrase" type="s" direction="out"></arg>
+		</method>
+		<method name="RequestUserNameAndPassword">
+			<arg name="network" type="o" direction="in"></arg>
+			<arg name="user" type="s" direction="out"></arg>
+			<arg name="password" type="s" direction="out"></arg>
+		</method>
+		<method name="RequestUserPassword">
+			<arg name="network" type="o" direction="in"></arg>
+			<arg name="user" type="s" direction="in"></arg>
+			<arg name="password" type="s" direction="out"></arg>
+		</method>
+	</interface>
+</node>

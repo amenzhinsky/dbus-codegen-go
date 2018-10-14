@@ -1,0 +1,188 @@
+<node>
+	<interface name="org.freedesktop.DBus.Properties">
+		<method name="Get">
+			<arg name="interface_name" type="s" direction="in"></arg>
+			<arg name="property_name" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="out"></arg>
+		</method>
+		<method name="GetAll">
+			<arg name="interface_name" type="s" direction="in"></arg>
+			<arg name="properties" type="a{sv}" direction="out"></arg>
+		</method>
+		<method name="Set">
+			<arg name="interface_name" type="s" direction="in"></arg>
+			<arg name="property_name" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="in"></arg>
+		</method>
+		<signal name="PropertiesChanged">
+			<arg name="interface_name" type="s"></arg>
+			<arg name="changed_properties" type="a{sv}"></arg>
+			<arg name="invalidated_properties" type="as"></arg>
+		</signal>
+	</interface>
+	<interface name="org.freedesktop.DBus.Introspectable">
+		<method name="Introspect">
+			<arg name="xml_data" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.Peer">
+		<method name="Ping"></method>
+		<method name="GetMachineId">
+			<arg name="machine_uuid" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.Accounts">
+		<method name="ListCachedUsers">
+			<arg name="users" type="ao" direction="out"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="FindUserById">
+			<arg name="id" type="x" direction="in"></arg>
+			<arg name="user" type="o" direction="out"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="FindUserByName">
+			<arg name="name" type="s" direction="in"></arg>
+			<arg name="user" type="o" direction="out"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="CreateUser">
+			<arg name="name" type="s" direction="in"></arg>
+			<arg name="fullname" type="s" direction="in"></arg>
+			<arg name="accountType" type="i" direction="in"></arg>
+			<arg name="user" type="o" direction="out"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="CacheUser">
+			<arg name="name" type="s" direction="in"></arg>
+			<arg name="user" type="o" direction="out"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="UncacheUser">
+			<arg name="name" type="s" direction="in"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="DeleteUser">
+			<arg name="id" type="x" direction="in"></arg>
+			<arg name="removeFiles" type="b" direction="in"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<signal name="UserAdded">
+			<arg name="user" type="o"></arg>
+		</signal>
+		<signal name="UserDeleted">
+			<arg name="user" type="o"></arg>
+		</signal>
+		<property name="DaemonVersion" type="s" access="read"></property>
+		<property name="HasNoUsers" type="b" access="read"></property>
+		<property name="HasMultipleUsers" type="b" access="read"></property>
+		<property name="AutomaticLoginUsers" type="ao" access="read"></property>
+	</interface>
+	<interface name="org.freedesktop.Accounts.User">
+		<method name="SetUserName">
+			<arg name="name" type="s" direction="in"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="SetRealName">
+			<arg name="name" type="s" direction="in"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="SetEmail">
+			<arg name="email" type="s" direction="in"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="SetLanguage">
+			<arg name="language" type="s" direction="in"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="SetXSession">
+			<arg name="x_session" type="s" direction="in"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+			<annotation name="org.freedesktop.DBus.GLib.CSymbol" value="user_set_x_session"></annotation>
+		</method>
+		<method name="SetSession">
+			<arg name="session" type="s" direction="in"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+			<annotation name="org.freedesktop.DBus.GLib.CSymbol" value="user_set_session"></annotation>
+		</method>
+		<method name="SetSessionType">
+			<arg name="session_type" type="s" direction="in"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+			<annotation name="org.freedesktop.DBus.GLib.CSymbol" value="user_set_session_type"></annotation>
+		</method>
+		<method name="SetLocation">
+			<arg name="location" type="s" direction="in"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="SetHomeDirectory">
+			<arg name="homedir" type="s" direction="in"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="SetShell">
+			<arg name="shell" type="s" direction="in"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="SetIconFile">
+			<arg name="filename" type="s" direction="in"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="SetLocked">
+			<arg name="locked" type="b" direction="in"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="SetAccountType">
+			<arg name="accountType" type="i" direction="in"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="SetPasswordMode">
+			<arg name="mode" type="i" direction="in"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="SetPassword">
+			<arg name="password" type="s" direction="in"></arg>
+			<arg name="hint" type="s" direction="in"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="SetPasswordHint">
+			<arg name="hint" type="s" direction="in"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="SetAutomaticLogin">
+			<arg name="enabled" type="b" direction="in"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="GetPasswordExpirationPolicy">
+			<arg name="expiration_time" type="x" direction="out"></arg>
+			<arg name="last_change_time" type="x" direction="out"></arg>
+			<arg name="min_days_between_changes" type="x" direction="out"></arg>
+			<arg name="max_days_between_changes" type="x" direction="out"></arg>
+			<arg name="days_to_warn" type="x" direction="out"></arg>
+			<arg name="days_after_expiration_until_lock" type="x" direction="out"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<signal name="Changed"></signal>
+		<property name="Uid" type="t" access="read"></property>
+		<property name="UserName" type="s" access="read"></property>
+		<property name="RealName" type="s" access="read"></property>
+		<property name="AccountType" type="i" access="read"></property>
+		<property name="HomeDirectory" type="s" access="read"></property>
+		<property name="Shell" type="s" access="read"></property>
+		<property name="Email" type="s" access="read"></property>
+		<property name="Language" type="s" access="read"></property>
+		<property name="Session" type="s" access="read"></property>
+		<property name="SessionType" type="s" access="read"></property>
+		<property name="XSession" type="s" access="read"></property>
+		<property name="Location" type="s" access="read"></property>
+		<property name="LoginFrequency" type="t" access="read"></property>
+		<property name="LoginTime" type="x" access="read"></property>
+		<property name="LoginHistory" type="a(xxa{sv})" access="read"></property>
+		<property name="IconFile" type="s" access="read"></property>
+		<property name="Saved" type="b" access="read"></property>
+		<property name="Locked" type="b" access="read"></property>
+		<property name="PasswordMode" type="i" access="read"></property>
+		<property name="PasswordHint" type="s" access="read"></property>
+		<property name="AutomaticLogin" type="b" access="read"></property>
+		<property name="SystemAccount" type="b" access="read"></property>
+		<property name="LocalAccount" type="b" access="read"></property>
+	</interface>
+</node>

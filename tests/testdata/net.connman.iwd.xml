@@ -1,0 +1,109 @@
+<node>
+	<interface name="org.freedesktop.DBus.Introspectable">
+		<method name="Introspect">
+			<arg name="xml" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="net.connman.iwd.AgentManager">
+		<method name="RegisterAgent">
+			<arg name="path" type="o" direction="in"></arg>
+		</method>
+		<method name="UnregisterAgent">
+			<arg name="path" type="o" direction="in"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.ObjectManager">
+		<method name="GetManagedObjects">
+			<arg name="objpath_interfaces_and_properties" type="a{oa{sa{sv}}}" direction="out"></arg>
+		</method>
+		<signal name="InterfacesAdded">
+			<arg name="object_path" type="o"></arg>
+			<arg name="interfaces_and_properties" type="a{sa{sv}}"></arg>
+		</signal>
+		<signal name="InterfacesRemoved">
+			<arg name="object_path" type="o"></arg>
+			<arg name="interfaces" type="as"></arg>
+		</signal>
+	</interface>
+	<interface name="net.connman.iwd.Adapter">
+		<property name="Powered" type="b" access="readwrite"></property>
+		<property name="Model" type="s" access="read"></property>
+		<property name="Vendor" type="s" access="read"></property>
+		<property name="Name" type="s" access="read"></property>
+		<property name="SupportedModes" type="as" access="read"></property>
+	</interface>
+	<interface name="org.freedesktop.DBus.Properties">
+		<method name="Get">
+			<arg name="interface_name" type="s" direction="in"></arg>
+			<arg name="property_name" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="out"></arg>
+		</method>
+		<method name="Set">
+			<arg name="interface_name" type="s" direction="in"></arg>
+			<arg name="property_name" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="in"></arg>
+		</method>
+		<method name="GetAll">
+			<arg name="interface_name" type="s" direction="in"></arg>
+			<arg name="props" type="a{sv}" direction="out"></arg>
+		</method>
+		<signal name="PropertiesChanged">
+			<arg name="interface_name" type="s"></arg>
+			<arg name="changed_properties" type="a{sv}"></arg>
+			<arg name="invalidated_properties" type="as"></arg>
+		</signal>
+	</interface>
+	<interface name="net.connman.iwd.Device">
+		<property name="Name" type="s" access="read"></property>
+		<property name="Address" type="s" access="read"></property>
+		<property name="WDS" type="b" access="readwrite"></property>
+		<property name="Powered" type="b" access="readwrite"></property>
+		<property name="Adapter" type="o" access="read"></property>
+		<property name="Mode" type="s" access="readwrite"></property>
+	</interface>
+	<interface name="net.connman.iwd.Station">
+		<method name="ConnectHiddenNetwork">
+			<arg name="name" type="s" direction="in"></arg>
+		</method>
+		<method name="Disconnect"></method>
+		<method name="GetOrderedNetworks">
+			<arg name="networks" type="a(on)" direction="out"></arg>
+		</method>
+		<method name="Scan"></method>
+		<method name="RegisterSignalLevelAgent">
+			<arg name="path" type="o" direction="in"></arg>
+			<arg name="levels" type="an" direction="in"></arg>
+		</method>
+		<method name="UnregisterSignalLevelAgent">
+			<arg name="path" type="o" direction="in"></arg>
+		</method>
+		<property name="ConnectedNetwork" type="o" access="read"></property>
+		<property name="Scanning" type="b" access="read"></property>
+		<property name="State" type="s" access="read"></property>
+	</interface>
+	<interface name="net.connman.iwd.WiFiSimpleConfiguration">
+		<method name="PushButton"></method>
+		<method name="GeneratePin">
+			<arg name="pin" type="s" direction="out"></arg>
+		</method>
+		<method name="StartPin">
+			<arg name="pin" type="s" direction="in"></arg>
+		</method>
+		<method name="Cancel"></method>
+	</interface>
+	<interface name="net.connman.iwd.Network">
+		<method name="Connect"></method>
+		<property name="Name" type="s" access="read"></property>
+		<property name="Connected" type="b" access="read"></property>
+		<property name="Device" type="o" access="read"></property>
+		<property name="Type" type="s" access="read"></property>
+		<property name="KnownNetwork" type="o" access="read"></property>
+	</interface>
+	<interface name="net.connman.iwd.KnownNetwork">
+		<method name="Forget"></method>
+		<property name="Name" type="s" access="read"></property>
+		<property name="Type" type="s" access="read"></property>
+		<property name="Hidden" type="b" access="read"></property>
+		<property name="LastConnectedTime" type="s" access="read"></property>
+	</interface>
+</node>
