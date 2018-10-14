@@ -44,8 +44,7 @@ func TestCompile(t *testing.T) {
 		{"test_it_compiles.gof", "org.freedesktop.Accounts.xml"},
 		{"test_it_compiles.gof", "org.freedesktop.UDisks2.xml"},
 		{"test_it_compiles.gof", "org.freedesktop.systemd1.xml"},
-
-		// TODO: {"test_it_compiles.gof", "org.freedesktop.NetworkManager.xml"},
+		{"test_it_compiles.gof", "org.freedesktop.NetworkManager.xml"},
 	} {
 		tc := tc
 		t.Run(tc[0], func(t *testing.T) {

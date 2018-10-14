@@ -8,7 +8,7 @@ import (
 
 func TestIfaceType(t *testing.T) {
 	t.Parallel()
-	name, want := "org.freedesktop.DBus", "OrgFreedesktopDBus"
+	name, want := "org.freedesktop.DBus", "Org_Freedesktop_DBus"
 	if have := ifaceToType(name); have != want {
 		t.Fatalf("newIfaceType(%q) = %q, want %q", name, have, want)
 	}

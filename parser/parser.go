@@ -115,7 +115,7 @@ func ifaceToType(name string) string {
 		return name
 	}
 	return ifaceRegexp.ReplaceAllStringFunc(name, func(s string) string {
-		return strings.ToUpper(s[1:])
+		return "_" + strings.ToUpper(s[1:])
 	})
 }
 

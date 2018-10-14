@@ -252,6 +252,7 @@ type %s struct {
 	body   %s
 }
 
+// %s is a body container. 
 type %s struct {
 	%s
 }
@@ -283,6 +284,7 @@ func (s *%s) Body() %s {
 `,
 			signalType(iface, sig), iface.Name, sig.Name,
 			signalType(iface, sig), signalBodyType(iface, sig),
+			signalBodyType(iface, sig),
 			signalBodyType(iface, sig), joinArgs(sig.Args, ';'),
 			signalType(iface, sig), sig.Name,
 			signalType(iface, sig), iface.Name,
@@ -294,7 +296,7 @@ func (s *%s) Body() %s {
 }
 
 func signalType(iface *token.Interface, signal *token.Signal) string {
-	return iface.Type + signal.Type + "Signal"
+	return iface.Type + "_" + signal.Type + "Signal"
 }
 
 func signalBodyType(iface *token.Interface, signal *token.Signal) string {

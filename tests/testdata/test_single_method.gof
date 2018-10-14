@@ -24,7 +24,7 @@ func run() error {
 	o := LookupInterface(
 		conn.Object("org.freedesktop.DBus", "/org/freedesktop/DBus"),
 		"org.freedesktop.DBus",
-	).(*OrgFreedesktopDBus)
+	).(*Org_Freedesktop_DBus)
 	if _, err := o.GetId(); err != nil {
 		return err
 	}

@@ -26,7 +26,7 @@ func run() error {
 	conn.Signal(sigc)
 
 	const name = "dbusgen.test"
-	o := NewOrgFreedesktopDBus(conn.Object("org.freedesktop.DBus", "/org/freedesktop/DBus"))
+	o := NewOrg_Freedesktop_DBus(conn.Object("org.freedesktop.DBus", "/org/freedesktop/DBus"))
 	ret, err := o.RequestName(name, 3)
 	if err != nil {
 		return err
@@ -35,7 +35,7 @@ func run() error {
 		return errors.New("unexpected return code")
 	}
 Retry:
-	sig := LookupSignal(<-sigc).(*OrgFreedesktopDBusNameAcquiredSignal)
+	sig := LookupSignal(<-sigc).(*Org_Freedesktop_DBus_NameAcquiredSignal)
 	if sig.Body().Prop0[0] == ':' {
 		goto Retry
 	}
