@@ -11,10 +11,13 @@ func newBuffer() *buffer {
 
 type buffer struct {
 	buf bytes.Buffer
+	err error
 }
 
-func (b *buffer) writef(format string, v ...interface{}) (int, error) {
-	return fmt.Fprintf(&b.buf, format, v...)
+func (b *buffer) writef(format string, v ...interface{}) {
+	if _, err := fmt.Fprintf(&b.buf, format, v...); err != nil && b.err != nil {
+		b.err = err
+	}
 }
 
 func (b *buffer) writeln(s ...string) {
@@ -24,6 +27,6 @@ func (b *buffer) writeln(s ...string) {
 	b.buf.WriteByte('\n')
 }
 
-func (b *buffer) bytes() []byte {
-	return b.buf.Bytes()
+func (b *buffer) bytes() ([]byte, error) {
+	return b.buf.Bytes(), b.err
 }

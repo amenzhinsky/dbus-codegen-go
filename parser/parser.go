@@ -25,13 +25,12 @@ func ParseNode(node *introspect.Node) ([]*token.Interface, error) {
 	}
 	var ifaces []*token.Interface
 	for _, iface := range node.Interfaces {
-		typ := ifaceToType(iface.Name)
 		ifaces = append(ifaces, &token.Interface{
-			Type:       typ,
+			Type:       ifaceToType(iface.Name),
 			Name:       iface.Name,
 			Methods:    parseMethods(iface.Methods),
 			Properties: parseProperties(iface.Properties),
-			Signals:    parseSignals(typ, iface.Signals),
+			Signals:    parseSignals(iface.Signals),
 		})
 	}
 	return ifaces, nil
@@ -64,11 +63,11 @@ func parseProperties(props []introspect.Property) []*token.Property {
 	return properties
 }
 
-func parseSignals(typ string, sigs []introspect.Signal) []*token.Signal {
+func parseSignals(sigs []introspect.Signal) []*token.Signal {
 	signals := make([]*token.Signal, 0, len(sigs))
 	for _, sig := range sigs {
 		signals = append(signals, &token.Signal{
-			Type: typ + strings.Title(sig.Name) + "Signal",
+			Type: strings.Title(sig.Name),
 			Name: sig.Name,
 			Args: parseArgs(sig.Args, "", "prop", true),
 		})
@@ -121,5 +120,6 @@ func ifaceToType(name string) string {
 }
 
 func isKeyword(s string) bool {
+	// TODO: validate it doesn't match imported package names
 	return gotoken.Lookup(s).IsKeyword()
 }

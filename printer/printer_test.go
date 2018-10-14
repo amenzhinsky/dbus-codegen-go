@@ -8,6 +8,8 @@ import (
 )
 
 func TestPrint(t *testing.T) {
+	t.Parallel()
+
 	var buf bytes.Buffer
 	if err := Print(&buf, []*token.Interface{
 		{

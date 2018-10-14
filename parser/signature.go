@@ -1,14 +1,11 @@
 package parser
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
-type signature []string
-
-func (s signature) join(sep string) string {
-	return strings.Join([]string(s), sep)
-}
-
-func parseSignature(s string) signature {
+func parseSignature(s string) []string {
 	var ss []string
 	for i := 0; i < len(s); {
 		s, rlen := next(s[i:])
@@ -51,7 +48,7 @@ func next(s string) (string, int) {
 	case 'o':
 		return "dbus.ObjectPath", 1
 	case 'v':
-		return "interface{}", 1
+		return "dbus.Variant", 1
 	case 'g':
 		return "dbus.Signature", 1
 	case 'a':
@@ -81,8 +78,16 @@ func next(s string) (string, int) {
 			}
 			i++
 		}
-		return "struct {" + parseSignature(s[1:i-1]).join(";") + "}", i
+		return "struct {" + strings.Join(structFields(s[1:i-1]), ";") + "}", i
 	default:
 		panic("not supported signature: " + string(s[0]))
 	}
+}
+
+func structFields(s string) []string {
+	fields := make([]string, 0, len(s))
+	for i, sig := range parseSignature(s) {
+		fields = append(fields, fmt.Sprintf("v%d %s", i, sig))
+	}
+	return fields
 }

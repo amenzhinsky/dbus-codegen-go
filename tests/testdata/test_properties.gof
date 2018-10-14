@@ -21,7 +21,7 @@ func run() error {
 	}
 	defer conn.Close()
 
-	o := NewOrgFreedesktopDBus(conn, "org.freedesktop.DBus", "/org/freedesktop/DBus")
-	_, err = o.Interfaces()
+	o := NewOrgFreedesktopDBus(conn.Object("org.freedesktop.DBus", "/org/freedesktop/DBus"))
+	_, err = o.GetInterfaces()
 	return err
 }

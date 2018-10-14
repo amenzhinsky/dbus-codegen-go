@@ -2,6 +2,7 @@ package printer
 
 import (
 	"errors"
+	"fmt"
 	"go/format"
 	"io"
 	"regexp"
@@ -11,24 +12,38 @@ import (
 	"github.com/amenzhinsky/godbus-codegen/token"
 )
 
-var identRegexp = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9_]*$")
-
+// PrintOption is a Print configuration option.
 type PrintOption func(p *printer)
 
 type printer struct {
-	pkgName  string
-	prefixes []string
+	pkgName string
+	gofmt   bool
 }
 
+// WithPackageName overrides the package name of generated code.
 func WithPackageName(name string) PrintOption {
 	return func(p *printer) {
 		p.pkgName = name
 	}
 }
 
+// WithGofmt gofmts generated code, enabled by default.
+//
+// Not recommended to disable it, only for debugging the output,
+// because gofmt works as a validation step as well.
+func WithGofmt(enable bool) PrintOption {
+	return func(p *printer) {
+		p.gofmt = enable
+	}
+}
+
+var identRegexp = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9_]*$")
+
+// Print generates code for the provided interfaces and writes it to out.
 func Print(out io.Writer, ifaces []*token.Interface, opts ...PrintOption) error {
 	p := &printer{
 		pkgName: "dbusgen",
+		gofmt:   true,
 	}
 	for _, opt := range opts {
 		opt(p)
@@ -44,9 +59,9 @@ func Print(out io.Writer, ifaces []*token.Interface, opts ...PrintOption) error 
 
 	sortAll(ifaces)
 	writeHeader(buf, p.pkgName, ifaces)
-	writeInterfaceLookup(buf, ifaces)
+	writeInterfaceFuncs(buf, ifaces)
 	if haveSignals(ifaces) {
-		writeSignalLookup(buf, ifaces)
+		writeSignalFuncs(buf, ifaces)
 	}
 	for _, iface := range ifaces {
 		writeInterface(buf, iface)
@@ -55,12 +70,15 @@ func Print(out io.Writer, ifaces []*token.Interface, opts ...PrintOption) error 
 		writeSignals(buf, iface)
 	}
 
-	//fmt.Println(string(buf.bytes()))
-
-	// gofmt code
-	b, err := format.Source(buf.bytes())
+	b, err := buf.bytes()
 	if err != nil {
 		return err
+	}
+	if p.gofmt {
+		b, err = format.Source(b)
+		if err != nil {
+			return fmt.Errorf("parse error: %s", err)
+		}
 	}
 	_, err = out.Write(b)
 	return err
@@ -120,46 +138,62 @@ func writeHeader(buf *buffer, pkgName string, ifaces []*token.Interface) {
 			}
 		}
 	}
-	buf.writeln("package ", pkgName)
-	buf.writeln(`import "github.com/godbus/dbus"`)
+	buf.writef(`
+package %s
+
+import "github.com/godbus/dbus"
+
+const (
+	methodPropertyGet = "org.freedesktop.DBus.Properties.Get"
+	methodPropertySet = "org.freedesktop.DBus.Properties.Set"
+)
+`, pkgName)
 }
 
 func writeInterface(buf *buffer, iface *token.Interface) {
 	buf.writef(`// %s returns %s DBus interface implementation.
-func New%s(conn *dbus.Conn, dest string, path dbus.ObjectPath) *%s {
-	return &%s{conn.Object(dest, path)}
+func %s(object dbus.BusObject) *%s {
+	return &%s{object}
 }
 `,
-		iface.Type, iface.Name,
-		iface.Type, iface.Type,
+		ifaceNewType(iface), iface.Name,
+		ifaceNewType(iface), iface.Type,
 		iface.Type,
 	)
 	buf.writef(`// %s implements %s DBus interface.
 type %s struct {
 	object dbus.BusObject
 }
+
+func (o *%s) iface() string {
+	return %s
+}
 `,
 		iface.Type, iface.Name,
 		iface.Type,
+		iface.Type, ifaceNameConst(iface),
 	)
-
-	buf.writef(`func(o *%s) obj() dbus.BusObject {
-	return o.object
 }
-`, iface.Type)
+
+func ifaceNewType(iface *token.Interface) string {
+	return "New" + iface.Type
+}
+
+func ifaceNameConst(iface *token.Interface) string {
+	return "Interface" + iface.Type
 }
 
 func writeMethods(buf *buffer, iface *token.Interface) {
 	for _, method := range iface.Methods {
 		buf.writef(`// %s calls %s.%s method.
-func(o *%s) %s(%s) (%serr error) {
-	err = o.object.Call("%s", 0, %s).Store(%s)
+func (o *%s) %s(%s) (%serr error) {
+	err = o.object.Call(%s + "." + "%s", 0, %s).Store(%s)
 	return
 }
 `,
-			iface.Type, iface.Name, method.Name,
+			method.Type, iface.Name, method.Name,
 			iface.Type, method.Type, joinArgs(method.In, ','), joinArgs(method.Out, ','),
-			iface.Name+"."+method.Type, joinArgNames(method.In), joinStoreArgs(method.Out),
+			ifaceNameConst(iface), method.Name, joinArgNames(method.In), joinStoreArgs(method.Out),
 		)
 	}
 }
@@ -168,20 +202,36 @@ func writeProperties(buf *buffer, iface *token.Interface) {
 	for _, prop := range iface.Properties {
 		if prop.Read {
 			buf.writef(`// %s gets %s.%s property.
-func(o *%s) %s() (%s %s, err error) {
-	err = o.object.Call("org.freedesktop.DBus.Properties.Get", 0, "%s", "%s").Store(&%s)
+func (o *%s) %s() (%s %s, err error) {
+	err = o.object.Call(methodPropertyGet, 0, %s, "%s").Store(&%s)
 	return
 }
 `,
-				prop.Type, iface.Name, prop.Name,
-				iface.Type, prop.Type, prop.Arg.Name, prop.Arg.Type,
-				iface.Name, prop.Name, prop.Arg.Name,
+				propGetType(prop), iface.Name, prop.Name,
+				iface.Type, propGetType(prop), prop.Arg.Name, prop.Arg.Type,
+				ifaceNameConst(iface), prop.Name, prop.Arg.Name,
 			)
 		}
 		if prop.Write {
-			// TODO
+			buf.writef(`// %s sets %s.%s property.
+func (o *%s) %s(%s %s) error {
+	return o.object.Call(methodPropertySet, 0, %s, "%s", %s).Store()
+}
+`,
+				propSetType(prop), iface.Name, prop.Name,
+				iface.Type, propSetType(prop), prop.Arg.Name, prop.Arg.Type,
+				ifaceNameConst(iface), prop.Name, prop.Arg.Name,
+			)
 		}
 	}
+}
+
+func propGetType(prop *token.Property) string {
+	return "Get" + prop.Type
+}
+
+func propSetType(prop *token.Property) string {
+	return "Set" + prop.Type
 }
 
 func writeSignals(buf *buffer, iface *token.Interface) {
@@ -190,10 +240,10 @@ func writeSignals(buf *buffer, iface *token.Interface) {
 type %s struct {
 	sender string
 	path   dbus.ObjectPath
-	body   %sBody
+	body   %s
 }
 
-type %sBody struct {
+type %s struct {
 	%s
 }
 
@@ -218,19 +268,31 @@ func (s *%s) Path() dbus.ObjectPath {
 }
 
 // Body returns the signals' payload.
-func (s *%s) Body() %sBody {
+func (s *%s) Body() %s {
 	return s.body
 }
 `,
-			sig.Type, iface.Name, sig.Name,
-			sig.Type, sig.Type, sig.Type, joinArgs(sig.Args, ';'),
-			sig.Type, sig.Name, sig.Type, iface.Name, sig.Type, sig.Type,
-			sig.Type, sig.Type,
+			signalType(iface, sig), iface.Name, sig.Name,
+			signalType(iface, sig), signalBodyType(iface, sig),
+			signalBodyType(iface, sig), joinArgs(sig.Args, ';'),
+			signalType(iface, sig), sig.Name,
+			signalType(iface, sig), iface.Name,
+			signalType(iface, sig),
+			signalType(iface, sig),
+			signalType(iface, sig), signalBodyType(iface, sig),
 		)
 	}
 }
 
-func writeSignalLookup(buf *buffer, ifaces []*token.Interface) {
+func signalType(iface *token.Interface, signal *token.Signal) string {
+	return iface.Type + signal.Type + "Signal"
+}
+
+func signalBodyType(iface *token.Interface, signal *token.Signal) string {
+	return signalType(iface, signal) + "Body"
+}
+
+func writeSignalFuncs(buf *buffer, ifaces []*token.Interface) {
 	buf.writef(`// Signal is a common interface for all signals.
 type Signal interface {
 	Name() string
@@ -245,12 +307,16 @@ func LookupSignal(signal *dbus.Signal) Signal {
 `)
 	for _, iface := range ifaces {
 		for _, sig := range iface.Signals {
-			buf.writef(`	case "%s.%s":
+			buf.writef(`	case %s + "." + "%s":
 		return &%s{
 			sender: signal.Sender,
 			path:   signal.Path,
-			body:   %sBody{
-`, iface.Name, sig.Name, sig.Type, sig.Type)
+			body:   %s{
+`,
+				ifaceNameConst(iface), sig.Name,
+				signalType(iface, sig),
+				signalBodyType(iface, sig),
+			)
 			for i, arg := range sig.Args {
 				buf.writef("				%s: signal.Body[%d].(%s),\n", arg.Name, i, arg.Type)
 			}
@@ -265,21 +331,27 @@ func LookupSignal(signal *dbus.Signal) Signal {
 `)
 }
 
-func writeInterfaceLookup(buf *buffer, ifaces []*token.Interface) {
+func writeInterfaceFuncs(buf *buffer, ifaces []*token.Interface) {
+	buf.writeln("// interface names")
+	buf.writeln("const (")
+	for _, iface := range ifaces {
+		buf.writef("	%s = %q\n", ifaceNameConst(iface), iface.Name)
+	}
+	buf.writeln(")")
+
 	buf.writef(`// Interface is a DBus interface implementation.
 type Interface interface {
-	obj() dbus.BusObject
+	iface() string
 }
-`)
 
-	buf.writef(`// LookupInterface returns an interface for the named object.
-func LookupInterface(conn *dbus.Conn, dest string, path dbus.ObjectPath, iface string) Interface {
+// LookupInterface returns an interface for the named object.
+func LookupInterface(object dbus.BusObject, iface string) Interface {
 	switch iface {
 `)
 	for _, iface := range ifaces {
-		buf.writef(`case "%s":
-	return New%s(conn, dest, path)
-`, iface.Name, iface.Type)
+		buf.writef(`case %s:
+	return New%s(object)
+`, ifaceNameConst(iface), iface.Type)
 	}
 	buf.writef(`	default:
 		return nil

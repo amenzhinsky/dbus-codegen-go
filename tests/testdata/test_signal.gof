@@ -26,7 +26,7 @@ func run() error {
 	conn.Signal(sigc)
 
 	const name = "dbusgen.test"
-	o := NewOrgFreedesktopDBus(conn, "org.freedesktop.DBus", "/org/freedesktop/DBus")
+	o := NewOrgFreedesktopDBus(conn.Object("org.freedesktop.DBus", "/org/freedesktop/DBus"))
 	ret, err := o.RequestName(name, 3)
 	if err != nil {
 		return err

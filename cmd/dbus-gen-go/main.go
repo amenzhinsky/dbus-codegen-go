@@ -22,6 +22,7 @@ var (
 	exceptFlag  []string
 	sessionFlag bool
 	packageFlag string
+	gofmtFlag   bool
 )
 
 type stringsFlag []string
@@ -55,6 +56,7 @@ Flags:
 	flag.Var((*stringsFlag)(&exceptFlag), "except", "skip the named interfaces")
 	flag.BoolVar(&sessionFlag, "session", false, "connect to the session bus instead of the system")
 	flag.StringVar(&packageFlag, "package", "dbusgen", "generated package name")
+	flag.BoolVar(&gofmtFlag, "gofmt", true, "gofmt results")
 	flag.Parse()
 
 	if err := run(); err != nil {
@@ -113,7 +115,10 @@ func run() error {
 			filtered = append(filtered, iface)
 		}
 	}
-	return printer.Print(os.Stdout, filtered, printer.WithPackageName(packageFlag))
+	return printer.Print(os.Stdout, filtered,
+		printer.WithPackageName(packageFlag),
+		printer.WithGofmt(gofmtFlag),
+	)
 }
 
 func connect(session bool) (*dbus.Conn, error) {

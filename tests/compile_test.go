@@ -34,17 +34,17 @@ func TestCompile(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
-	for _, run := range []struct {
-		xml, gof string
-	}{
-		{"org.freedesktop.DBus.xml", "test_signal.gof"},
-		{"org.freedesktop.DBus.xml", "test_single_method.gof"},
-		{"org.freedesktop.DBus.xml", "test_properties.gof"},
+	for _, tc := range [][]string{
+		{"test_signal.gof", "org.freedesktop.DBus.xml"},
+		{"test_single_method.gof", "org.freedesktop.DBus.xml"},
+		{"test_properties.gof", "org.freedesktop.DBus.xml"},
 	} {
-		t.Run(run.gof, func(t *testing.T) {
-			ifaces := parse(t, "org.freedesktop.DBus.xml")
-			if err := compile(ifaces, run.gof); err != nil {
-				t.Errorf("compile(%q, %q) error: %s", run.xml, run.gof, err)
+		tc := tc
+		t.Run(tc[0], func(t *testing.T) {
+			t.Parallel()
+			ifaces := parse(t, tc.xml)
+			if err := compile(ifaces, tc[0]); err != nil {
+				t.Errorf("compile(%q, %q) error: %s", tc[0], tc[1:], err)
 			}
 		})
 	}
@@ -70,7 +70,7 @@ func compile(ifaces []*token.Interface, goFile string) error {
 	}
 	defer os.RemoveAll(temp)
 
-	f, err := os.OpenFile(temp+"/dbus.go", os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(temp+"/gen.go", os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
@@ -82,22 +82,9 @@ func compile(ifaces []*token.Interface, goFile string) error {
 	if err := copyFile(temp+"/main.go", "testdata/"+goFile); err != nil {
 		return err
 	}
-	cwd, err := os.Getwd()
+	out, err := exec.Command("go", "run", temp+"/main.go", temp+"/gen.go").CombinedOutput()
 	if err != nil {
-		return err
-	}
-	if err := os.Chdir(temp); err != nil {
-		return err
-	}
-	defer os.Chdir(cwd)
-
-	out, err := exec.Command("go", "build", "-o", "a.out").CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("compilation error: %s", out)
-	}
-	out, err = exec.Command("./a.out").CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("executable error: %s", out)
+		return fmt.Errorf("compile error: %s", out)
 	}
 	return nil
 }

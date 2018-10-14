@@ -7,6 +7,7 @@ import (
 )
 
 func TestIfaceType(t *testing.T) {
+	t.Parallel()
 	name, want := "org.freedesktop.DBus", "OrgFreedesktopDBus"
 	if have := ifaceToType(name); have != want {
 		t.Fatalf("newIfaceType(%q) = %q, want %q", name, have, want)
@@ -14,7 +15,8 @@ func TestIfaceType(t *testing.T) {
 }
 
 func TestParseArg(t *testing.T) {
-	for _, run := range []struct {
+	t.Parallel()
+	for _, tc := range []struct {
 		identifier string
 		signature  string
 		prefix     string
@@ -32,10 +34,10 @@ func TestParseArg(t *testing.T) {
 		{"Type", "s", "out", 5, false, token.Arg{Name: "outType", Type: "string"}},
 	} {
 		if have := parseArg(
-			run.identifier, run.signature, run.prefix, run.i, run.export,
-		); *have != run.want {
+			tc.identifier, tc.signature, tc.prefix, tc.i, tc.export,
+		); *have != tc.want {
 			t.Errorf("parseArg(%q, %q, %q, %d, %t) = %v, want %v",
-				run.identifier, run.signature, run.prefix, run.i, run.export, *have, run.want,
+				tc.identifier, tc.signature, tc.prefix, tc.i, tc.export, *have, tc.want,
 			)
 		}
 	}
