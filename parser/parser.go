@@ -23,52 +23,67 @@ func ParseNode(node *introspect.Node) ([]*token.Interface, error) {
 	if node == nil {
 		panic("node is nil")
 	}
-	var ifaces []*token.Interface
-	for _, iface := range node.Interfaces {
-		ifaces = append(ifaces, &token.Interface{
-			Name:       iface.Name,
-			Methods:    parseMethods(iface.Methods),
-			Properties: parseProperties(iface.Properties),
-			Signals:    parseSignals(iface.Signals),
-		})
+	ifaces := make([]*token.Interface, len(node.Interfaces))
+	for i := range node.Interfaces {
+		ifaces[i] = &token.Interface{
+			Name:        node.Interfaces[i].Name,
+			Methods:     parseMethods(node.Interfaces[i].Methods),
+			Properties:  parseProperties(node.Interfaces[i].Properties),
+			Signals:     parseSignals(node.Interfaces[i].Signals),
+			Annotations: parseAnnotations(node.Interfaces[i].Annotations),
+		}
 	}
 	return ifaces, nil
 }
 
 func parseMethods(methods []introspect.Method) []*token.Method {
-	list := make([]*token.Method, 0, len(methods))
-	for _, method := range methods {
-		list = append(list, &token.Method{
-			Name: method.Name,
-			In:   parseArgs(method.Args, "in"),
-			Out:  parseArgs(method.Args, "out"),
-		})
+	list := make([]*token.Method, len(methods))
+	for i := range methods {
+		list[i] = &token.Method{
+			Name:        methods[i].Name,
+			In:          parseArgs(methods[i].Args, "in"),
+			Out:         parseArgs(methods[i].Args, "out"),
+			Annotations: parseAnnotations(methods[i].Annotations),
+		}
 	}
 	return list
 }
 
 func parseProperties(props []introspect.Property) []*token.Property {
-	properties := make([]*token.Property, 0, len(props))
-	for _, prop := range props {
-		properties = append(properties, &token.Property{
-			Name:  prop.Name,
-			Arg:   parseArg(prop.Name, prop.Type),
-			Read:  strings.Index(prop.Access, "read") != -1,
-			Write: strings.Index(prop.Access, "write") != -1,
-		})
+	properties := make([]*token.Property, len(props))
+	for i := range props {
+		properties[i] = &token.Property{
+			Name:        props[i].Name,
+			Arg:         parseArg(props[i].Name, props[i].Type),
+			Read:        strings.Index(props[i].Access, "read") != -1,
+			Write:       strings.Index(props[i].Access, "write") != -1,
+			Annotations: parseAnnotations(props[i].Annotations),
+		}
 	}
 	return properties
 }
 
 func parseSignals(sigs []introspect.Signal) []*token.Signal {
-	signals := make([]*token.Signal, 0, len(sigs))
-	for _, sig := range sigs {
-		signals = append(signals, &token.Signal{
-			Name: sig.Name,
-			Args: parseArgs(sig.Args, ""),
-		})
+	signals := make([]*token.Signal, len(sigs))
+	for i := range sigs {
+		signals[i] = &token.Signal{
+			Name:        sigs[i].Name,
+			Args:        parseArgs(sigs[i].Args, ""),
+			Annotations: parseAnnotations(sigs[i].Annotations),
+		}
 	}
 	return signals
+}
+
+func parseAnnotations(annotations []introspect.Annotation) []*token.Annotation {
+	out := make([]*token.Annotation, len(annotations))
+	for i := range annotations {
+		out[i] = &token.Annotation{
+			Name:  annotations[i].Name,
+			Value: annotations[i].Value,
+		}
+	}
+	return out
 }
 
 func parseArgs(args []introspect.Arg, direction string) []*token.Arg {
