@@ -110,7 +110,6 @@ The generated output by `printer` package cannot be parsed by gofmt and that is 
 
 ## TODO
 
-- support annotations
 - server side code generation
 - add coding examples
 - sophisticated tests

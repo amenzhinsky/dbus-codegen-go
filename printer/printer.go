@@ -143,8 +143,14 @@ const (
 `, pkgName)
 }
 
+func writeAnnotations(buf *buffer, annotations []*token.Annotation) {
+	for _, annotation := range annotations {
+		buf.writef("// @annotation %s = %s\n", annotation.Name, annotation.Value)
+	}
+}
+
 func writeInterface(buf *buffer, iface *token.Interface) {
-	buf.writef(`// %s returns %s DBus interface implementation.
+	buf.writef(`// %s creates and allocates %s.
 func %s(object dbus.BusObject) *%s {
 	return &%s{object}
 }
@@ -153,8 +159,9 @@ func %s(object dbus.BusObject) *%s {
 		ifaceNewType(iface), ifaceType(iface),
 		ifaceType(iface),
 	)
-	buf.writef(`// %s implements %s DBus interface.
-type %s struct {
+	buf.writef("// %s implements %s DBus interface.\n", ifaceType(iface), iface.Name)
+	writeAnnotations(buf, iface.Annotations)
+	buf.writef(`type %s struct {
 	object dbus.BusObject
 }
 
@@ -162,7 +169,6 @@ func (o *%s) iface() string {
 	return %s
 }
 `,
-		ifaceType(iface), iface.Name,
 		ifaceType(iface),
 		ifaceType(iface), ifaceNameConst(iface),
 	)
@@ -170,13 +176,13 @@ func (o *%s) iface() string {
 
 func writeMethods(buf *buffer, iface *token.Interface) {
 	for _, method := range iface.Methods {
-		buf.writef(`// %s calls %s.%s method.
-func (o *%s) %s(%s) (%serr error) {
+		buf.writef("// %s calls %s.%s method.\n", methodType(method), iface.Name, method.Name)
+		writeAnnotations(buf, method.Annotations)
+		buf.writef(`func (o *%s) %s(%s) (%serr error) {
 	err = o.object.Call(%s + "." + "%s", 0, %s).Store(%s)
 	return
 }
 `,
-			methodType(method), iface.Name, method.Name,
 			ifaceType(iface), methodType(method), joinArgs(method.In, ',', "in", false),
 			joinArgs(method.Out, ',', "out", false),
 			ifaceNameConst(iface), method.Name, joinArgNames(method.In), joinStoreArgs(method.Out),
@@ -187,24 +193,24 @@ func (o *%s) %s(%s) (%serr error) {
 func writeProperties(buf *buffer, iface *token.Interface) {
 	for i, prop := range iface.Properties {
 		if prop.Read && !ifaceHasMethod(iface, propGetType(prop)) {
-			buf.writef(`// %s gets %s.%s property.
-func (o *%s) %s() (%s %s, err error) {
+			buf.writef("// %s gets %s.%s property.\n", propGetType(prop), iface.Name, prop.Name)
+			writeAnnotations(buf, prop.Annotations)
+			buf.writef(`func (o *%s) %s() (%s %s, err error) {
 	err = o.object.Call(methodPropertyGet, 0, %s, "%s").Store(&%s)
 	return
 }
 `,
-				propGetType(prop), iface.Name, prop.Name,
 				ifaceType(iface), propGetType(prop), argName(prop.Arg, "v", i, false), prop.Arg.Type,
 				ifaceNameConst(iface), prop.Name, argName(prop.Arg, "v", i, false),
 			)
 		}
 		if prop.Write && !ifaceHasMethod(iface, propSetType(prop)) {
-			buf.writef(`// %s sets %s.%s property.
-func (o *%s) %s(%s %s) error {
+			buf.writef("// %s sets %s.%s property.\n", propSetType(prop), iface.Name, prop.Name)
+			writeAnnotations(buf, prop.Annotations)
+			buf.writef(`func (o *%s) %s(%s %s) error {
 	return o.object.Call(methodPropertySet, 0, %s, "%s", %s).Store()
 }
 `,
-				propSetType(prop), iface.Name, prop.Name,
 				ifaceType(iface), propSetType(prop), argName(prop.Arg, "v", 0, false), prop.Arg.Type,
 				ifaceNameConst(iface), prop.Name, argName(prop.Arg, "v", 0, false),
 			)
@@ -214,8 +220,9 @@ func (o *%s) %s(%s %s) error {
 
 func writeSignals(buf *buffer, iface *token.Interface) {
 	for _, sig := range iface.Signals {
-		buf.writef(`// %s represents %s.%s signal.
-type %s struct {
+		buf.writef("// %s represents %s.%s signal.\n", signalType(iface, sig), iface.Name, sig.Name)
+		writeAnnotations(buf, sig.Annotations)
+		buf.writef(`type %s struct {
 	sender string
 	path   dbus.ObjectPath
 	Body   %s
@@ -246,7 +253,6 @@ func (s *%s) Path() dbus.ObjectPath {
 	return s.path
 }
 `,
-			signalType(iface, sig), iface.Name, sig.Name,
 			signalType(iface, sig), signalBodyType(iface, sig),
 			signalBodyType(iface, sig),
 			signalBodyType(iface, sig), joinArgs(sig.Args, ';', "v", true),
