@@ -233,7 +233,7 @@ func (s *%s) Name() string {
 
 // Interface returns the signal's interface.
 func (s *%s) Interface() string {
-	return "%s"
+	return %s
 }
 
 // Sender returns the signal's sender unique name.
@@ -256,7 +256,7 @@ func (s *%s) Body() %s {
 			signalBodyType(iface, sig),
 			signalBodyType(iface, sig), joinArgs(sig.Args, ';', "v", true),
 			signalType(iface, sig), sig.Name,
-			signalType(iface, sig), iface.Name,
+			signalType(iface, sig), ifaceNameConst(iface),
 			signalType(iface, sig),
 			signalType(iface, sig),
 			signalType(iface, sig), signalBodyType(iface, sig),
