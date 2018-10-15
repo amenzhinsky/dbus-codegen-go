@@ -9,9 +9,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/amenzhinsky/godbus-codegen/parser"
-	"github.com/amenzhinsky/godbus-codegen/printer"
-	"github.com/amenzhinsky/godbus-codegen/token"
+	"github.com/amenzhinsky/dbus-codegen-go/parser"
+	"github.com/amenzhinsky/dbus-codegen-go/printer"
+	"github.com/amenzhinsky/dbus-codegen-go/token"
 	"github.com/godbus/dbus"
 	"github.com/godbus/dbus/introspect"
 )

@@ -1,0 +1,381 @@
+<node>
+	<interface name="org.freedesktop.DBus.Peer">
+		<method name="Ping"></method>
+		<method name="GetMachineId">
+			<arg name="machine_uuid" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.Introspectable">
+		<method name="Introspect">
+			<arg name="data" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.Properties">
+		<method name="Get">
+			<arg name="interface" type="s" direction="in"></arg>
+			<arg name="property" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="out"></arg>
+		</method>
+		<method name="GetAll">
+			<arg name="interface" type="s" direction="in"></arg>
+			<arg name="properties" type="a{sv}" direction="out"></arg>
+		</method>
+		<method name="Set">
+			<arg name="interface" type="s" direction="in"></arg>
+			<arg name="property" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="in"></arg>
+		</method>
+		<signal name="PropertiesChanged">
+			<arg name="interface" type="s"></arg>
+			<arg name="changed_properties" type="a{sv}"></arg>
+			<arg name="invalidated_properties" type="as"></arg>
+		</signal>
+	</interface>
+	<interface name="org.freedesktop.machine1.Manager">
+		<method name="GetMachine">
+			<arg type="s" direction="in"></arg>
+			<arg type="o" direction="out"></arg>
+		</method>
+		<method name="GetImage">
+			<arg type="s" direction="in"></arg>
+			<arg type="o" direction="out"></arg>
+		</method>
+		<method name="GetMachineByPID">
+			<arg type="u" direction="in"></arg>
+			<arg type="o" direction="out"></arg>
+		</method>
+		<method name="ListMachines">
+			<arg type="a(ssso)" direction="out"></arg>
+		</method>
+		<method name="ListImages">
+			<arg type="a(ssbttto)" direction="out"></arg>
+		</method>
+		<method name="CreateMachine">
+			<arg type="s" direction="in"></arg>
+			<arg type="ay" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="u" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="a(sv)" direction="in"></arg>
+			<arg type="o" direction="out"></arg>
+			<annotation name="org.freedesktop.systemd1.Privileged" value="true"></annotation>
+		</method>
+		<method name="CreateMachineWithNetwork">
+			<arg type="s" direction="in"></arg>
+			<arg type="ay" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="u" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="ai" direction="in"></arg>
+			<arg type="a(sv)" direction="in"></arg>
+			<arg type="o" direction="out"></arg>
+			<annotation name="org.freedesktop.systemd1.Privileged" value="true"></annotation>
+		</method>
+		<method name="RegisterMachine">
+			<arg type="s" direction="in"></arg>
+			<arg type="ay" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="u" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="o" direction="out"></arg>
+			<annotation name="org.freedesktop.systemd1.Privileged" value="true"></annotation>
+		</method>
+		<method name="RegisterMachineWithNetwork">
+			<arg type="s" direction="in"></arg>
+			<arg type="ay" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="u" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="ai" direction="in"></arg>
+			<arg type="o" direction="out"></arg>
+			<annotation name="org.freedesktop.systemd1.Privileged" value="true"></annotation>
+		</method>
+		<method name="TerminateMachine">
+			<arg type="s" direction="in"></arg>
+		</method>
+		<method name="KillMachine">
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="i" direction="in"></arg>
+		</method>
+		<method name="GetMachineAddresses">
+			<arg type="s" direction="in"></arg>
+			<arg type="a(iay)" direction="out"></arg>
+		</method>
+		<method name="GetMachineOSRelease">
+			<arg type="s" direction="in"></arg>
+			<arg type="a{ss}" direction="out"></arg>
+		</method>
+		<method name="OpenMachinePTY">
+			<arg type="s" direction="in"></arg>
+			<arg type="h" direction="out"></arg>
+			<arg type="s" direction="out"></arg>
+			<annotation name="org.freedesktop.systemd1.Privileged" value="true"></annotation>
+		</method>
+		<method name="OpenMachineLogin">
+			<arg type="s" direction="in"></arg>
+			<arg type="h" direction="out"></arg>
+			<arg type="s" direction="out"></arg>
+		</method>
+		<method name="OpenMachineShell">
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="as" direction="in"></arg>
+			<arg type="as" direction="in"></arg>
+			<arg type="h" direction="out"></arg>
+			<arg type="s" direction="out"></arg>
+		</method>
+		<method name="BindMountMachine">
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+		</method>
+		<method name="CopyFromMachine">
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+		</method>
+		<method name="CopyToMachine">
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+		</method>
+		<method name="OpenMachineRootDirectory">
+			<arg type="s" direction="in"></arg>
+			<arg type="h" direction="out"></arg>
+		</method>
+		<method name="GetMachineUIDShift">
+			<arg type="s" direction="in"></arg>
+			<arg type="u" direction="out"></arg>
+		</method>
+		<method name="RemoveImage">
+			<arg type="s" direction="in"></arg>
+		</method>
+		<method name="RenameImage">
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+		</method>
+		<method name="CloneImage">
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+		</method>
+		<method name="MarkImageReadOnly">
+			<arg type="s" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+		</method>
+		<method name="GetImageHostname">
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="out"></arg>
+		</method>
+		<method name="GetImageMachineID">
+			<arg type="s" direction="in"></arg>
+			<arg type="ay" direction="out"></arg>
+		</method>
+		<method name="GetImageMachineInfo">
+			<arg type="s" direction="in"></arg>
+			<arg type="a{ss}" direction="out"></arg>
+		</method>
+		<method name="GetImageOSRelease">
+			<arg type="s" direction="in"></arg>
+			<arg type="a{ss}" direction="out"></arg>
+		</method>
+		<method name="SetPoolLimit">
+			<arg type="t" direction="in"></arg>
+		</method>
+		<method name="SetImageLimit">
+			<arg type="s" direction="in"></arg>
+			<arg type="t" direction="in"></arg>
+		</method>
+		<method name="CleanPool">
+			<arg type="s" direction="in"></arg>
+			<arg type="a(st)" direction="out"></arg>
+		</method>
+		<method name="MapFromMachineUser">
+			<arg type="s" direction="in"></arg>
+			<arg type="u" direction="in"></arg>
+			<arg type="u" direction="out"></arg>
+		</method>
+		<method name="MapToMachineUser">
+			<arg type="u" direction="in"></arg>
+			<arg type="s" direction="out"></arg>
+			<arg type="o" direction="out"></arg>
+			<arg type="u" direction="out"></arg>
+		</method>
+		<method name="MapFromMachineGroup">
+			<arg type="s" direction="in"></arg>
+			<arg type="u" direction="in"></arg>
+			<arg type="u" direction="out"></arg>
+		</method>
+		<method name="MapToMachineGroup">
+			<arg type="u" direction="in"></arg>
+			<arg type="s" direction="out"></arg>
+			<arg type="o" direction="out"></arg>
+			<arg type="u" direction="out"></arg>
+		</method>
+		<signal name="MachineNew">
+			<arg type="s"></arg>
+			<arg type="o"></arg>
+		</signal>
+		<signal name="MachineRemoved">
+			<arg type="s"></arg>
+			<arg type="o"></arg>
+		</signal>
+		<property name="PoolPath" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="PoolUsage" type="t" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="PoolLimit" type="t" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+	</interface>
+	<interface name="org.freedesktop.machine1.Image">
+		<method name="Remove"></method>
+		<method name="Rename">
+			<arg type="s" direction="in"></arg>
+		</method>
+		<method name="Clone">
+			<arg type="s" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+		</method>
+		<method name="MarkReadOnly">
+			<arg type="b" direction="in"></arg>
+		</method>
+		<method name="SetLimit">
+			<arg type="t" direction="in"></arg>
+		</method>
+		<method name="GetHostname">
+			<arg type="s" direction="out"></arg>
+		</method>
+		<method name="GetMachineID">
+			<arg type="ay" direction="out"></arg>
+		</method>
+		<method name="GetMachineInfo">
+			<arg type="a{ss}" direction="out"></arg>
+		</method>
+		<method name="GetOSRelease">
+			<arg type="a{ss}" direction="out"></arg>
+		</method>
+		<property name="Name" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="Path" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="Type" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="ReadOnly" type="b" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="CreationTimestamp" type="t" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="ModificationTimestamp" type="t" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="Usage" type="t" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="Limit" type="t" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="UsageExclusive" type="t" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="LimitExclusive" type="t" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+	</interface>
+	<interface name="org.freedesktop.machine1.Machine">
+		<method name="Terminate"></method>
+		<method name="Kill">
+			<arg type="s" direction="in"></arg>
+			<arg type="i" direction="in"></arg>
+		</method>
+		<method name="GetAddresses">
+			<arg type="a(iay)" direction="out"></arg>
+		</method>
+		<method name="GetOSRelease">
+			<arg type="a{ss}" direction="out"></arg>
+		</method>
+		<method name="GetUIDShift">
+			<arg type="u" direction="out"></arg>
+		</method>
+		<method name="OpenPTY">
+			<arg type="h" direction="out"></arg>
+			<arg type="s" direction="out"></arg>
+		</method>
+		<method name="OpenLogin">
+			<arg type="h" direction="out"></arg>
+			<arg type="s" direction="out"></arg>
+		</method>
+		<method name="OpenShell">
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="as" direction="in"></arg>
+			<arg type="as" direction="in"></arg>
+			<arg type="h" direction="out"></arg>
+			<arg type="s" direction="out"></arg>
+		</method>
+		<method name="BindMount">
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+		</method>
+		<method name="CopyFrom">
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+		</method>
+		<method name="CopyTo">
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+		</method>
+		<method name="OpenRootDirectory">
+			<arg type="h" direction="out"></arg>
+		</method>
+		<property name="Name" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"></annotation>
+		</property>
+		<property name="Id" type="ay" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"></annotation>
+		</property>
+		<property name="Timestamp" type="t" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"></annotation>
+		</property>
+		<property name="TimestampMonotonic" type="t" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"></annotation>
+		</property>
+		<property name="Service" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"></annotation>
+		</property>
+		<property name="Unit" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"></annotation>
+		</property>
+		<property name="Leader" type="u" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"></annotation>
+		</property>
+		<property name="Class" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"></annotation>
+		</property>
+		<property name="RootDirectory" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"></annotation>
+		</property>
+		<property name="NetworkInterfaces" type="ai" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"></annotation>
+		</property>
+		<property name="State" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+	</interface>
+</node>

@@ -1,0 +1,210 @@
+<node>
+	<interface name="org.freedesktop.DBus.Properties">
+		<method name="Get">
+			<arg name="interface_name" type="s" direction="in"></arg>
+			<arg name="property_name" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="out"></arg>
+		</method>
+		<method name="GetAll">
+			<arg name="interface_name" type="s" direction="in"></arg>
+			<arg name="properties" type="a{sv}" direction="out"></arg>
+		</method>
+		<method name="Set">
+			<arg name="interface_name" type="s" direction="in"></arg>
+			<arg name="property_name" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="in"></arg>
+		</method>
+		<signal name="PropertiesChanged">
+			<arg name="interface_name" type="s"></arg>
+			<arg name="changed_properties" type="a{sv}"></arg>
+			<arg name="invalidated_properties" type="as"></arg>
+		</signal>
+	</interface>
+	<interface name="org.freedesktop.DBus.Introspectable">
+		<method name="Introspect">
+			<arg name="xml_data" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.Peer">
+		<method name="Ping"></method>
+		<method name="GetMachineId">
+			<arg name="machine_uuid" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.ColorManager">
+		<method name="GetDevices">
+			<arg name="devices" type="ao" direction="out"></arg>
+		</method>
+		<method name="GetDevicesByKind">
+			<arg name="kind" type="s" direction="in"></arg>
+			<arg name="devices" type="ao" direction="out"></arg>
+		</method>
+		<method name="FindDeviceById">
+			<arg name="device_id" type="s" direction="in"></arg>
+			<arg name="object_path" type="o" direction="out"></arg>
+		</method>
+		<method name="FindSensorById">
+			<arg name="sensor_id" type="s" direction="in"></arg>
+			<arg name="object_path" type="o" direction="out"></arg>
+		</method>
+		<method name="FindDeviceByProperty">
+			<arg name="key" type="s" direction="in"></arg>
+			<arg name="value" type="s" direction="in"></arg>
+			<arg name="object_path" type="o" direction="out"></arg>
+		</method>
+		<method name="FindProfileById">
+			<arg name="profile_id" type="s" direction="in"></arg>
+			<arg name="object_path" type="o" direction="out"></arg>
+		</method>
+		<method name="FindProfileByProperty">
+			<arg name="key" type="s" direction="in"></arg>
+			<arg name="value" type="s" direction="in"></arg>
+			<arg name="object_path" type="o" direction="out"></arg>
+		</method>
+		<method name="FindProfileByFilename">
+			<arg name="filename" type="s" direction="in"></arg>
+			<arg name="object_path" type="o" direction="out"></arg>
+		</method>
+		<method name="GetStandardSpace">
+			<arg name="standard_space" type="s" direction="in"></arg>
+			<arg name="object_path" type="o" direction="out"></arg>
+		</method>
+		<method name="GetProfiles">
+			<arg name="devices" type="ao" direction="out"></arg>
+		</method>
+		<method name="GetSensors">
+			<arg name="devices" type="ao" direction="out"></arg>
+		</method>
+		<method name="GetProfilesByKind">
+			<arg name="kind" type="s" direction="in"></arg>
+			<arg name="devices" type="ao" direction="out"></arg>
+		</method>
+		<method name="CreateProfileWithFd">
+			<arg name="profile_id" type="s" direction="in"></arg>
+			<arg name="scope" type="s" direction="in"></arg>
+			<arg name="handle" type="h" direction="in"></arg>
+			<arg name="properties" type="a{ss}" direction="in"></arg>
+			<arg name="object_path" type="o" direction="out"></arg>
+		</method>
+		<method name="CreateProfile">
+			<arg name="profile_id" type="s" direction="in"></arg>
+			<arg name="scope" type="s" direction="in"></arg>
+			<arg name="properties" type="a{ss}" direction="in"></arg>
+			<arg name="object_path" type="o" direction="out"></arg>
+		</method>
+		<method name="CreateDevice">
+			<arg name="device_id" type="s" direction="in"></arg>
+			<arg name="scope" type="s" direction="in"></arg>
+			<arg name="properties" type="a{ss}" direction="in"></arg>
+			<arg name="object_path" type="o" direction="out"></arg>
+		</method>
+		<method name="DeleteDevice">
+			<arg name="object_path" type="o" direction="in"></arg>
+		</method>
+		<method name="DeleteProfile">
+			<arg name="object_path" type="o" direction="in"></arg>
+		</method>
+		<signal name="Changed"></signal>
+		<signal name="DeviceAdded">
+			<arg name="object_path" type="o"></arg>
+		</signal>
+		<signal name="DeviceRemoved">
+			<arg name="object_path" type="o"></arg>
+		</signal>
+		<signal name="DeviceChanged">
+			<arg name="object_path" type="o"></arg>
+		</signal>
+		<signal name="ProfileAdded">
+			<arg name="object_path" type="o"></arg>
+		</signal>
+		<signal name="ProfileRemoved">
+			<arg name="object_path" type="o"></arg>
+		</signal>
+		<signal name="SensorAdded">
+			<arg name="object_path" type="o"></arg>
+		</signal>
+		<signal name="SensorRemoved">
+			<arg name="object_path" type="o"></arg>
+		</signal>
+		<signal name="ProfileChanged">
+			<arg name="object_path" type="o"></arg>
+		</signal>
+		<property name="DaemonVersion" type="s" access="read"></property>
+		<property name="SystemVendor" type="s" access="read"></property>
+		<property name="SystemModel" type="s" access="read"></property>
+	</interface>
+	<interface name="org.freedesktop.ColorManager.Device">
+		<method name="SetProperty">
+			<arg name="property_name" type="s" direction="in"></arg>
+			<arg name="property_value" type="s" direction="in"></arg>
+		</method>
+		<method name="AddProfile">
+			<arg name="relation" type="s" direction="in"></arg>
+			<arg name="object_path" type="o" direction="in"></arg>
+		</method>
+		<method name="RemoveProfile">
+			<arg name="object_path" type="o" direction="in"></arg>
+		</method>
+		<method name="MakeProfileDefault">
+			<arg name="profile_path" type="o" direction="in"></arg>
+		</method>
+		<method name="GetProfileForQualifiers">
+			<arg name="qualifiers" type="as" direction="in"></arg>
+			<arg name="object_path" type="o" direction="out"></arg>
+		</method>
+		<method name="GetProfileRelation">
+			<arg name="object_path" type="o" direction="in"></arg>
+			<arg name="relation" type="s" direction="out"></arg>
+		</method>
+		<method name="ProfilingInhibit"></method>
+		<method name="ProfilingUninhibit"></method>
+		<method name="SetEnabled">
+			<arg name="enabled" type="b" direction="in"></arg>
+		</method>
+		<signal name="Changed"></signal>
+		<property name="Created" type="t" access="read"></property>
+		<property name="Modified" type="t" access="read"></property>
+		<property name="Model" type="s" access="read"></property>
+		<property name="Serial" type="s" access="read"></property>
+		<property name="Vendor" type="s" access="read"></property>
+		<property name="Colorspace" type="s" access="read"></property>
+		<property name="Kind" type="s" access="read"></property>
+		<property name="DeviceId" type="s" access="read"></property>
+		<property name="Profiles" type="ao" access="read"></property>
+		<property name="Mode" type="s" access="read"></property>
+		<property name="Format" type="s" access="read"></property>
+		<property name="Scope" type="s" access="read"></property>
+		<property name="Owner" type="u" access="read"></property>
+		<property name="Enabled" type="b" access="read"></property>
+		<property name="Seat" type="s" access="read"></property>
+		<property name="Embedded" type="b" access="read"></property>
+		<property name="Metadata" type="a{ss}" access="read">
+			<annotation name="org.qtproject.QtDBus.QtTypeName" value="CdStringMap"></annotation>
+		</property>
+		<property name="ProfilingInhibitors" type="as" access="read"></property>
+	</interface>
+	<interface name="org.freedesktop.ColorManager.Profile">
+		<method name="SetProperty">
+			<arg name="property_name" type="s" direction="in"></arg>
+			<arg name="property_value" type="s" direction="in"></arg>
+		</method>
+		<method name="InstallSystemWide"></method>
+		<signal name="Changed"></signal>
+		<property name="ProfileId" type="s" access="read"></property>
+		<property name="Title" type="s" access="read"></property>
+		<property name="Metadata" type="a{ss}" access="read">
+			<annotation name="org.qtproject.QtDBus.QtTypeName" value="CdStringMap"></annotation>
+		</property>
+		<property name="Qualifier" type="s" access="read"></property>
+		<property name="Format" type="s" access="read"></property>
+		<property name="Kind" type="s" access="read"></property>
+		<property name="Colorspace" type="s" access="read"></property>
+		<property name="HasVcgt" type="b" access="read"></property>
+		<property name="IsSystemWide" type="b" access="read"></property>
+		<property name="Filename" type="s" access="read"></property>
+		<property name="Created" type="x" access="read"></property>
+		<property name="Scope" type="s" access="read"></property>
+		<property name="Owner" type="u" access="read"></property>
+		<property name="Warnings" type="as" access="read"></property>
+	</interface>
+</node>

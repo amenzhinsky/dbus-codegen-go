@@ -4,12 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"go/format"
+	gotoken "go/token"
 	"io"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
-	"github.com/amenzhinsky/godbus-codegen/token"
+	"github.com/amenzhinsky/dbus-codegen-go/token"
 )
 
 // PrintOption is a Print configuration option.
@@ -60,7 +62,7 @@ func Print(out io.Writer, ifaces []*token.Interface, opts ...PrintOption) error 
 	sortAll(ifaces)
 	writeHeader(buf, p.pkgName, ifaces)
 	writeInterfaceFuncs(buf, ifaces)
-	if haveSignals(ifaces) {
+	if ifacesHaveSignals(ifaces) {
 		writeSignalFuncs(buf, ifaces)
 	}
 	for _, iface := range ifaces {
@@ -82,15 +84,6 @@ func Print(out io.Writer, ifaces []*token.Interface, opts ...PrintOption) error 
 	}
 	_, err = out.Write(b)
 	return err
-}
-
-func haveSignals(ifaces []*token.Interface) bool {
-	for _, iface := range ifaces {
-		if len(iface.Signals) != 0 {
-			return true
-		}
-	}
-	return false
 }
 
 // sortAll sorts all entities to provide the same output each run.
@@ -157,8 +150,8 @@ func %s(object dbus.BusObject) *%s {
 }
 `,
 		ifaceNewType(iface), iface.Name,
-		ifaceNewType(iface), iface.Type,
-		iface.Type,
+		ifaceNewType(iface), ifaceType(iface),
+		ifaceType(iface),
 	)
 	buf.writef(`// %s implements %s DBus interface.
 type %s struct {
@@ -169,18 +162,10 @@ func (o *%s) iface() string {
 	return %s
 }
 `,
-		iface.Type, iface.Name,
-		iface.Type,
-		iface.Type, ifaceNameConst(iface),
+		ifaceType(iface), iface.Name,
+		ifaceType(iface),
+		ifaceType(iface), ifaceNameConst(iface),
 	)
-}
-
-func ifaceNewType(iface *token.Interface) string {
-	return "New" + iface.Type
-}
-
-func ifaceNameConst(iface *token.Interface) string {
-	return "Interface" + iface.Type
 }
 
 func writeMethods(buf *buffer, iface *token.Interface) {
@@ -191,15 +176,16 @@ func (o *%s) %s(%s) (%serr error) {
 	return
 }
 `,
-			method.Type, iface.Name, method.Name,
-			iface.Type, method.Type, joinArgs(method.In, ','), joinArgs(method.Out, ','),
+			methodType(method), iface.Name, method.Name,
+			ifaceType(iface), methodType(method), joinArgs(method.In, ',', "in", false),
+			joinArgs(method.Out, ',', "out", false),
 			ifaceNameConst(iface), method.Name, joinArgNames(method.In), joinStoreArgs(method.Out),
 		)
 	}
 }
 
 func writeProperties(buf *buffer, iface *token.Interface) {
-	for _, prop := range iface.Properties {
+	for i, prop := range iface.Properties {
 		if prop.Read && !ifaceHasMethod(iface, propGetType(prop)) {
 			buf.writef(`// %s gets %s.%s property.
 func (o *%s) %s() (%s %s, err error) {
@@ -208,8 +194,8 @@ func (o *%s) %s() (%s %s, err error) {
 }
 `,
 				propGetType(prop), iface.Name, prop.Name,
-				iface.Type, propGetType(prop), prop.Arg.Name, prop.Arg.Type,
-				ifaceNameConst(iface), prop.Name, prop.Arg.Name,
+				ifaceType(iface), propGetType(prop), argName(prop.Arg, "v", i, false), prop.Arg.Type,
+				ifaceNameConst(iface), prop.Name, argName(prop.Arg, "v", i, false),
 			)
 		}
 		if prop.Write && !ifaceHasMethod(iface, propSetType(prop)) {
@@ -219,28 +205,11 @@ func (o *%s) %s(%s %s) error {
 }
 `,
 				propSetType(prop), iface.Name, prop.Name,
-				iface.Type, propSetType(prop), prop.Arg.Name, prop.Arg.Type,
-				ifaceNameConst(iface), prop.Name, prop.Arg.Name,
+				ifaceType(iface), propSetType(prop), argName(prop.Arg, "v", 0, false), prop.Arg.Type,
+				ifaceNameConst(iface), prop.Name, argName(prop.Arg, "v", 0, false),
 			)
 		}
 	}
-}
-
-func ifaceHasMethod(iface *token.Interface, name string) bool {
-	for _, method := range iface.Methods {
-		if method.Name == name {
-			return true
-		}
-	}
-	return false
-}
-
-func propGetType(prop *token.Property) string {
-	return "Get" + prop.Type
-}
-
-func propSetType(prop *token.Property) string {
-	return "Set" + prop.Type
 }
 
 func writeSignals(buf *buffer, iface *token.Interface) {
@@ -285,7 +254,7 @@ func (s *%s) Body() %s {
 			signalType(iface, sig), iface.Name, sig.Name,
 			signalType(iface, sig), signalBodyType(iface, sig),
 			signalBodyType(iface, sig),
-			signalBodyType(iface, sig), joinArgs(sig.Args, ';'),
+			signalBodyType(iface, sig), joinArgs(sig.Args, ';', "v", true),
 			signalType(iface, sig), sig.Name,
 			signalType(iface, sig), iface.Name,
 			signalType(iface, sig),
@@ -293,14 +262,6 @@ func (s *%s) Body() %s {
 			signalType(iface, sig), signalBodyType(iface, sig),
 		)
 	}
-}
-
-func signalType(iface *token.Interface, signal *token.Signal) string {
-	return iface.Type + "_" + signal.Type + "Signal"
-}
-
-func signalBodyType(iface *token.Interface, signal *token.Signal) string {
-	return signalType(iface, signal) + "Body"
 }
 
 func writeSignalFuncs(buf *buffer, ifaces []*token.Interface) {
@@ -329,7 +290,7 @@ func LookupSignal(signal *dbus.Signal) Signal {
 				signalBodyType(iface, sig),
 			)
 			for i, arg := range sig.Args {
-				buf.writef("				%s: signal.Body[%d].(%s),\n", arg.Name, i, arg.Type)
+				buf.writef("				%s: signal.Body[%d].(%s),\n", argName(arg, "v", i, true), i, arg.Type)
 			}
 			buf.writeln("			},")
 			buf.writeln("		}")
@@ -362,13 +323,101 @@ func LookupInterface(object dbus.BusObject, iface string) Interface {
 	for _, iface := range ifaces {
 		buf.writef(`case %s:
 	return New%s(object)
-`, ifaceNameConst(iface), iface.Type)
+`, ifaceNameConst(iface), ifaceType(iface))
 	}
 	buf.writef(`	default:
 		return nil
 	}
 }
 `)
+}
+
+func isKeyword(s string) bool {
+	// TODO: validate it doesn't match imported package names
+	return gotoken.Lookup(s).IsKeyword()
+}
+
+var ifaceRegexp = regexp.MustCompile("\\.[a-zA-Z0-9]")
+
+func ifaceType(iface *token.Interface) string {
+	name := strings.Title(iface.Name)
+	if isKeyword(name) {
+		return name
+	}
+	return ifaceRegexp.ReplaceAllStringFunc(name, func(s string) string {
+		return "_" + strings.ToUpper(s[1:])
+	})
+}
+
+func ifaceNewType(iface *token.Interface) string {
+	return "New" + ifaceType(iface)
+}
+
+func ifaceNameConst(iface *token.Interface) string {
+	return "Interface" + ifaceType(iface)
+}
+
+func ifaceHasMethod(iface *token.Interface, name string) bool {
+	for _, method := range iface.Methods {
+		if method.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func ifacesHaveSignals(ifaces []*token.Interface) bool {
+	for _, iface := range ifaces {
+		if len(iface.Signals) != 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func methodType(method *token.Method) string {
+	return strings.Title(method.Name)
+}
+
+func propType(prop *token.Property) string {
+	return strings.Title(prop.Name)
+}
+
+func propGetType(prop *token.Property) string {
+	return "Get" + propType(prop)
+}
+
+func propSetType(prop *token.Property) string {
+	return "Set" + propType(prop)
+}
+
+func signalType(iface *token.Interface, signal *token.Signal) string {
+	return ifaceType(iface) + "_" + strings.Title(signal.Name) + "Signal"
+}
+
+func signalBodyType(iface *token.Interface, signal *token.Signal) string {
+	return signalType(iface, signal) + "Body"
+}
+
+var varRegexp = regexp.MustCompile("_+[a-zA-Z0-9]")
+
+func argName(arg *token.Arg, prefix string, i int, export bool) string {
+	name := arg.Name
+	if name == "" {
+		name = prefix + strconv.Itoa(i)
+	} else {
+		name = strings.ToLower(name[:1]) +
+			varRegexp.ReplaceAllStringFunc(name[1:], func(s string) string {
+				return strings.Title(strings.TrimLeft(s, "_"))
+			})
+	}
+	if export {
+		name = strings.Title(name)
+	}
+	if isKeyword(name) {
+		return prefix + strings.Title(name)
+	}
+	return name
 }
 
 func joinStoreArgs(args []*token.Arg) string {
@@ -378,15 +427,15 @@ func joinStoreArgs(args []*token.Arg) string {
 			buf.WriteByte(',')
 		}
 		buf.WriteByte('&')
-		buf.WriteString(args[i].Name)
+		buf.WriteString(argName(args[i], "out", i, false))
 	}
 	return buf.String()
 }
 
-func joinArgs(args []*token.Arg, separator byte) string {
+func joinArgs(args []*token.Arg, separator byte, suffix string, export bool) string {
 	var buf strings.Builder
 	for i := range args {
-		buf.WriteString(args[i].Name)
+		buf.WriteString(argName(args[i], suffix, i, export))
 		buf.WriteByte(' ')
 		buf.WriteString(args[i].Type)
 		buf.WriteByte(separator)
@@ -400,7 +449,7 @@ func joinArgNames(args []*token.Arg) string {
 		if i != 0 {
 			buf.WriteByte(',')
 		}
-		buf.WriteString(args[i].Name)
+		buf.WriteString(argName(args[i], "in", i, false))
 	}
 	return buf.String()
 }

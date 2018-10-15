@@ -3,112 +3,182 @@ package integration_test
 import (
 	"crypto/sha256"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"reflect"
+	"path/filepath"
+	"strings"
+	"sync"
 	"testing"
-
-	"github.com/amenzhinsky/godbus-codegen/parser"
-	"github.com/amenzhinsky/godbus-codegen/printer"
-	"github.com/amenzhinsky/godbus-codegen/token"
 )
 
-func TestOutputHashSum(t *testing.T) {
-	ifaces := parse(t, "org.freedesktop.DBus.xml")
-	hash1 := sha256.New()
-	hash2 := sha256.New()
-	if err := printer.Print(hash1, ifaces); err != nil {
-		t.Fatal(err)
+var (
+	binaryMu   sync.Mutex
+	binaryFile string
+)
+
+func TestMain(m *testing.M) {
+	os.Exit(m.Run())
+	if binaryFile != "" { // no need to lock mutex
+		os.Remove(binaryFile)
 	}
-	if err := printer.Print(hash2, ifaces); err != nil {
-		t.Fatal(err)
+}
+
+// generated with: `dbus-codegen-go -xml -dest=X > testdata/X.xml`
+var xmlFiles = []string{
+	"testdata/net.connman.iwd.xml",
+	"testdata/org.freedesktop.Accounts.xml",
+	"testdata/org.freedesktop.ColorManager.xml",
+	"testdata/org.freedesktop.DBus.xml",
+	"testdata/org.freedesktop.hostname1.xml",
+	"testdata/org.freedesktop.import1.xml",
+	"testdata/org.freedesktop.locale1.xml",
+	"testdata/org.freedesktop.login1.xml",
+	"testdata/org.freedesktop.machine1.xml",
+	"testdata/org.freedesktop.NetworkManager.xml",
+	"testdata/org.freedesktop.resolve1.xml",
+	"testdata/org.freedesktop.systemd1.xml",
+	"testdata/org.freedesktop.timedate1.xml",
+	"testdata/org.freedesktop.UDisks2.xml",
+	"testdata/org.freedesktop.Upower.xml",
+	"testdata/org.gnome.DisplayManager.xml",
+}
+
+func TestHashSum(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode")
 	}
-	if !reflect.DeepEqual(hash1.Sum(nil), hash2.Sum(nil)) {
-		t.Fatal("outputs have different hash sums")
+	for _, tc := range xmlFiles {
+		file := tc
+		t.Run(file, func(t *testing.T) {
+			t.Parallel()
+			checkHashSum(t, file)
+		})
 	}
+}
+
+func TestHashSumAll(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode")
+	}
+	t.Parallel()
+	checkHashSum(t, xmlFiles...)
+}
+
+func checkHashSum(t *testing.T, files ...string) {
+	h1 := sha256.Sum256(run(t, files...))
+	h2 := sha256.Sum256(run(t, files...))
+	if h1 != h2 {
+		t.Errorf("hashsums for %v are different over multiple runs", files)
+	}
+}
+
+func TestItCompiles(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode")
+	}
+	for _, tc := range xmlFiles {
+		file := tc
+		t.Run(file, func(t *testing.T) {
+			t.Parallel()
+			checkCompile(t, "testdata/test_it_compiles.gof", file)
+		})
+	}
+}
+
+func TestItCompilesAll(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode")
+	}
+	t.Parallel()
+	checkCompile(t, "testdata/test_it_compiles.gof", xmlFiles...)
 }
 
 func TestCompile(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
-	for _, tc := range [][2]string{
-		{"test_signal.gof", "org.freedesktop.DBus.xml"},
-		{"test_single_method.gof", "org.freedesktop.DBus.xml"},
-		{"test_properties.gof", "org.freedesktop.DBus.xml"},
-
-		{"test_it_compiles.gof", "net.connman.iwd.xml"},
-		{"test_it_compiles.gof", "org.freedesktop.DBus.xml"},
-		{"test_it_compiles.gof", "org.freedesktop.Accounts.xml"},
-		{"test_it_compiles.gof", "org.freedesktop.UDisks2.xml"},
-		{"test_it_compiles.gof", "org.freedesktop.systemd1.xml"},
-		{"test_it_compiles.gof", "org.freedesktop.NetworkManager.xml"},
+	for _, tc := range [][]string{
+		{"testdata/test_signal.gof", "testdata/org.freedesktop.DBus.xml"},
+		{"testdata/test_single_method.gof", "testdata/org.freedesktop.DBus.xml"},
+		{"testdata/test_properties.gof", "testdata/org.freedesktop.DBus.xml"},
 	} {
-		tc := tc
-		t.Run(tc[0], func(t *testing.T) {
+		goFile, xmlFiles := tc[0], tc[1:]
+		t.Run(goFile+"_"+strings.Join(xmlFiles, "-"), func(t *testing.T) {
 			t.Parallel()
-			ifaces := parse(t, tc[1])
-			if err := compile(ifaces, tc[0]); err != nil {
-				t.Errorf("compile(%q, %q) error: %s", tc[0], tc[1], err)
-			}
+			checkCompile(t, goFile, xmlFiles...)
 		})
 	}
 }
 
-func parse(t *testing.T, xmlFile string) []*token.Interface {
+func checkCompile(t *testing.T, goFile string, xmlFiles ...string) {
 	t.Helper()
-	b, err := ioutil.ReadFile("testdata/" + xmlFile)
-	if err != nil {
-		t.Fatal(err)
+	b := run(t, append([]string{"-package", "main"}, xmlFiles...)...)
+	if err := compile(b, goFile); err != nil {
+		t.Errorf("compile(%q, %v) error: %s", goFile, xmlFiles, err)
 	}
-	ifaces, err := parser.Parse(b)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return ifaces
 }
 
-func compile(ifaces []*token.Interface, goFile string) error {
+// run runs the package binary with the given args.
+// It compiles the package to a temporary file for possible further reuse,
+// since `go run` takes much time for linking each time, TestMain cleans it up.
+func run(t *testing.T, argv ...string) []byte {
+	t.Helper()
+	binaryMu.Lock()
+	if binaryFile == "" {
+		var err error
+		binaryFile, err = build()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	binaryMu.Unlock()
+
+	b, err := exec.Command(binaryFile, argv...).CombinedOutput()
+	if err != nil {
+		t.Fatalf("generate error: %s, output: %s", err, string(b))
+	}
+	return b
+}
+
+func build() (string, error) {
+	f, err := ioutil.TempFile("", "")
+	if err != nil {
+		return "", err
+	}
+	f.Close()
+	if err = os.Chmod(f.Name(), 0644); err != nil {
+		return "", err
+	}
+	if b, err := exec.Command(
+		"go", "build", "-ldflags=-s", "-o", f.Name(), "./..",
+	).CombinedOutput(); err != nil {
+		return "", fmt.Errorf("binary compilation error: %s", string(b))
+	}
+	return f.Name(), nil
+}
+
+func compile(b []byte, goFile string) error {
 	temp, err := ioutil.TempDir("", "")
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(temp)
 
-	f, err := os.OpenFile(temp+"/gen.go", os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
+	if err = ioutil.WriteFile(temp+"/gen.go", b, 0644); err != nil {
+		return err
+	}
+	path, err := filepath.Abs(goFile)
 	if err != nil {
 		return err
 	}
-	if err = printer.Print(f, ifaces, printer.WithPackageName("main")); err != nil {
+	if err = os.Symlink(path, temp+"/main.go"); err != nil {
 		return err
 	}
-	defer f.Close()
-
-	if err := copyFile(temp+"/main.go", "testdata/"+goFile); err != nil {
-		return err
-	}
-	out, err := exec.Command("go", "run", temp+"/main.go", temp+"/gen.go").CombinedOutput()
-	if err != nil {
+	if out, err := exec.Command(
+		"go", "run", temp+"/main.go", temp+"/gen.go",
+	).CombinedOutput(); err != nil {
 		return fmt.Errorf("compile error: %s", out)
 	}
 	return nil
-}
-
-func copyFile(dst, src string) error {
-	d, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
-	if err != nil {
-		return err
-	}
-	defer d.Close()
-
-	s, err := os.OpenFile(src, os.O_RDONLY, 0644)
-	if err != nil {
-		return err
-	}
-	defer s.Close()
-
-	_, err = io.Copy(d, s)
-	return err
 }

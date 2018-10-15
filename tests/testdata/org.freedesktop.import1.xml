@@ -1,0 +1,97 @@
+<node>
+	<interface name="org.freedesktop.DBus.Peer">
+		<method name="Ping"></method>
+		<method name="GetMachineId">
+			<arg name="machine_uuid" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.Introspectable">
+		<method name="Introspect">
+			<arg name="data" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.Properties">
+		<method name="Get">
+			<arg name="interface" type="s" direction="in"></arg>
+			<arg name="property" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="out"></arg>
+		</method>
+		<method name="GetAll">
+			<arg name="interface" type="s" direction="in"></arg>
+			<arg name="properties" type="a{sv}" direction="out"></arg>
+		</method>
+		<method name="Set">
+			<arg name="interface" type="s" direction="in"></arg>
+			<arg name="property" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="in"></arg>
+		</method>
+		<signal name="PropertiesChanged">
+			<arg name="interface" type="s"></arg>
+			<arg name="changed_properties" type="a{sv}"></arg>
+			<arg name="invalidated_properties" type="as"></arg>
+		</signal>
+	</interface>
+	<interface name="org.freedesktop.import1.Manager">
+		<method name="ImportTar">
+			<arg type="h" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+			<arg type="u" direction="out"></arg>
+			<arg type="o" direction="out"></arg>
+		</method>
+		<method name="ImportRaw">
+			<arg type="h" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+			<arg type="u" direction="out"></arg>
+			<arg type="o" direction="out"></arg>
+		</method>
+		<method name="ExportTar">
+			<arg type="s" direction="in"></arg>
+			<arg type="h" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="u" direction="out"></arg>
+			<arg type="o" direction="out"></arg>
+		</method>
+		<method name="ExportRaw">
+			<arg type="s" direction="in"></arg>
+			<arg type="h" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="u" direction="out"></arg>
+			<arg type="o" direction="out"></arg>
+		</method>
+		<method name="PullTar">
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+			<arg type="u" direction="out"></arg>
+			<arg type="o" direction="out"></arg>
+		</method>
+		<method name="PullRaw">
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+			<arg type="u" direction="out"></arg>
+			<arg type="o" direction="out"></arg>
+		</method>
+		<method name="ListTransfers">
+			<arg type="a(usssdo)" direction="out"></arg>
+		</method>
+		<method name="CancelTransfer">
+			<arg type="u" direction="in"></arg>
+		</method>
+		<signal name="TransferNew">
+			<arg type="u"></arg>
+			<arg type="o"></arg>
+		</signal>
+		<signal name="TransferRemoved">
+			<arg type="u"></arg>
+			<arg type="o"></arg>
+			<arg type="s"></arg>
+		</signal>
+	</interface>
+</node>

@@ -1,0 +1,89 @@
+<node>
+	<interface name="org.freedesktop.DBus.Peer">
+		<method name="Ping"></method>
+		<method name="GetMachineId">
+			<arg name="machine_uuid" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.Introspectable">
+		<method name="Introspect">
+			<arg name="data" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.Properties">
+		<method name="Get">
+			<arg name="interface" type="s" direction="in"></arg>
+			<arg name="property" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="out"></arg>
+		</method>
+		<method name="GetAll">
+			<arg name="interface" type="s" direction="in"></arg>
+			<arg name="properties" type="a{sv}" direction="out"></arg>
+		</method>
+		<method name="Set">
+			<arg name="interface" type="s" direction="in"></arg>
+			<arg name="property" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="in"></arg>
+		</method>
+		<signal name="PropertiesChanged">
+			<arg name="interface" type="s"></arg>
+			<arg name="changed_properties" type="a{sv}"></arg>
+			<arg name="invalidated_properties" type="as"></arg>
+		</signal>
+	</interface>
+	<interface name="org.freedesktop.hostname1">
+		<method name="SetHostname">
+			<arg type="s" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+		</method>
+		<method name="SetStaticHostname">
+			<arg type="s" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+		</method>
+		<method name="SetPrettyHostname">
+			<arg type="s" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+		</method>
+		<method name="SetIconName">
+			<arg type="s" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+		</method>
+		<method name="SetChassis">
+			<arg type="s" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+		</method>
+		<method name="SetDeployment">
+			<arg type="s" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+		</method>
+		<method name="SetLocation">
+			<arg type="s" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+		</method>
+		<property name="Hostname" type="s" access="read"></property>
+		<property name="StaticHostname" type="s" access="read"></property>
+		<property name="PrettyHostname" type="s" access="read"></property>
+		<property name="IconName" type="s" access="read"></property>
+		<property name="Chassis" type="s" access="read"></property>
+		<property name="Deployment" type="s" access="read"></property>
+		<property name="Location" type="s" access="read"></property>
+		<property name="KernelName" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"></annotation>
+		</property>
+		<property name="KernelRelease" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"></annotation>
+		</property>
+		<property name="KernelVersion" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"></annotation>
+		</property>
+		<property name="OperatingSystemPrettyName" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"></annotation>
+		</property>
+		<property name="OperatingSystemCPEName" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"></annotation>
+		</property>
+		<property name="HomeURL" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"></annotation>
+		</property>
+	</interface>
+</node>

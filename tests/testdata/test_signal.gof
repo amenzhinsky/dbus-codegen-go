@@ -36,12 +36,12 @@ func run() error {
 	}
 Retry:
 	sig := LookupSignal(<-sigc).(*Org_Freedesktop_DBus_NameAcquiredSignal)
-	if sig.Body().Prop0[0] == ':' {
+	if sig.Body().V0[0] == ':' {
 		goto Retry
 	}
 	if sig.Sender() != "org.freedesktop.DBus" ||
 		sig.Path() != "/org/freedesktop/DBus" ||
-		sig.Body().Prop0 != name {
+		sig.Body().V0 != name {
 		return fmt.Errorf("invalid signal = %v, want %v", sig, []interface{}{
 			sig.Sender(), sig.Path(), name,
 		})

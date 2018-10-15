@@ -1,34 +1,35 @@
 package token
 
+// Interface is a D-Bus interface.
 type Interface struct {
-	Type       string
 	Name       string
 	Methods    []*Method
 	Properties []*Property
 	Signals    []*Signal
 }
 
+// Method is a D-Bus method.
 type Method struct {
-	Type string
 	Name string
 	In   []*Arg
 	Out  []*Arg
 }
 
+// Property is a D-Bus property.
 type Property struct {
-	Type  string
 	Name  string
 	Arg   *Arg
 	Read  bool
 	Write bool
 }
 
+// Signal is a D-Bus signal.
 type Signal struct {
-	Type string
 	Name string
 	Args []*Arg
 }
 
+// Arg is an argument.
 type Arg struct {
 	Name string
 	Type string

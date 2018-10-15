@@ -1,0 +1,226 @@
+<node>
+	<interface name="org.freedesktop.DBus.Peer">
+		<method name="Ping"></method>
+		<method name="GetMachineId">
+			<arg name="machine_uuid" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.Introspectable">
+		<method name="Introspect">
+			<arg name="data" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.Properties">
+		<method name="Get">
+			<arg name="interface" type="s" direction="in"></arg>
+			<arg name="property" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="out"></arg>
+		</method>
+		<method name="GetAll">
+			<arg name="interface" type="s" direction="in"></arg>
+			<arg name="properties" type="a{sv}" direction="out"></arg>
+		</method>
+		<method name="Set">
+			<arg name="interface" type="s" direction="in"></arg>
+			<arg name="property" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="in"></arg>
+		</method>
+		<signal name="PropertiesChanged">
+			<arg name="interface" type="s"></arg>
+			<arg name="changed_properties" type="a{sv}"></arg>
+			<arg name="invalidated_properties" type="as"></arg>
+		</signal>
+	</interface>
+	<interface name="org.freedesktop.resolve1.Manager">
+		<method name="ResolveHostname">
+			<arg type="i" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="i" direction="in"></arg>
+			<arg type="t" direction="in"></arg>
+			<arg type="a(iiay)" direction="out"></arg>
+			<arg type="s" direction="out"></arg>
+			<arg type="t" direction="out"></arg>
+		</method>
+		<method name="ResolveAddress">
+			<arg type="i" direction="in"></arg>
+			<arg type="i" direction="in"></arg>
+			<arg type="ay" direction="in"></arg>
+			<arg type="t" direction="in"></arg>
+			<arg type="a(is)" direction="out"></arg>
+			<arg type="t" direction="out"></arg>
+		</method>
+		<method name="ResolveRecord">
+			<arg type="i" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="q" direction="in"></arg>
+			<arg type="q" direction="in"></arg>
+			<arg type="t" direction="in"></arg>
+			<arg type="a(iqqay)" direction="out"></arg>
+			<arg type="t" direction="out"></arg>
+		</method>
+		<method name="ResolveService">
+			<arg type="i" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="i" direction="in"></arg>
+			<arg type="t" direction="in"></arg>
+			<arg type="a(qqqsa(iiay)s)" direction="out"></arg>
+			<arg type="aay" direction="out"></arg>
+			<arg type="s" direction="out"></arg>
+			<arg type="s" direction="out"></arg>
+			<arg type="s" direction="out"></arg>
+			<arg type="t" direction="out"></arg>
+		</method>
+		<method name="ResetStatistics"></method>
+		<method name="FlushCaches"></method>
+		<method name="ResetServerFeatures"></method>
+		<method name="GetLink">
+			<arg type="i" direction="in"></arg>
+			<arg type="o" direction="out"></arg>
+		</method>
+		<method name="SetLinkDNS">
+			<arg type="i" direction="in"></arg>
+			<arg type="a(iay)" direction="in"></arg>
+		</method>
+		<method name="SetLinkDomains">
+			<arg type="i" direction="in"></arg>
+			<arg type="a(sb)" direction="in"></arg>
+		</method>
+		<method name="SetLinkLLMNR">
+			<arg type="i" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+		</method>
+		<method name="SetLinkMulticastDNS">
+			<arg type="i" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+		</method>
+		<method name="SetLinkDNSOverTLS">
+			<arg type="i" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+		</method>
+		<method name="SetLinkDNSSEC">
+			<arg type="i" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+		</method>
+		<method name="SetLinkDNSSECNegativeTrustAnchors">
+			<arg type="i" direction="in"></arg>
+			<arg type="as" direction="in"></arg>
+		</method>
+		<method name="RevertLink">
+			<arg type="i" direction="in"></arg>
+		</method>
+		<method name="RegisterService">
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="s" direction="in"></arg>
+			<arg type="q" direction="in"></arg>
+			<arg type="q" direction="in"></arg>
+			<arg type="q" direction="in"></arg>
+			<arg type="aa{say}" direction="in"></arg>
+			<arg type="o" direction="out"></arg>
+		</method>
+		<method name="UnregisterService">
+			<arg type="o" direction="in"></arg>
+		</method>
+		<property name="LLMNRHostname" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="LLMNR" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="MulticastDNS" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="DNSOverTLS" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="DNS" type="a(iiay)" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="FallbackDNS" type="a(iiay)" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"></annotation>
+		</property>
+		<property name="CurrentDNSServer" type="(iiay)" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="Domains" type="a(isb)" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="TransactionStatistics" type="(tt)" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="CacheStatistics" type="(ttt)" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="DNSSEC" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="DNSSECStatistics" type="(tttt)" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="DNSSECSupported" type="b" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="DNSSECNegativeTrustAnchors" type="as" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="DNSStubListener" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+	</interface>
+	<interface name="org.freedesktop.resolve1.Link">
+		<method name="SetDNS">
+			<arg type="a(iay)" direction="in"></arg>
+		</method>
+		<method name="SetDomains">
+			<arg type="a(sb)" direction="in"></arg>
+		</method>
+		<method name="SetLLMNR">
+			<arg type="s" direction="in"></arg>
+		</method>
+		<method name="SetMulticastDNS">
+			<arg type="s" direction="in"></arg>
+		</method>
+		<method name="SetDNSOverTLS">
+			<arg type="s" direction="in"></arg>
+		</method>
+		<method name="SetDNSSEC">
+			<arg type="s" direction="in"></arg>
+		</method>
+		<method name="SetDNSSECNegativeTrustAnchors">
+			<arg type="as" direction="in"></arg>
+		</method>
+		<method name="Revert"></method>
+		<property name="ScopesMask" type="t" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="DNS" type="a(iay)" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="CurrentDNSServer" type="(iay)" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="Domains" type="a(sb)" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="LLMNR" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="MulticastDNS" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="DNSOverTLS" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="DNSSEC" type="s" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="DNSSECNegativeTrustAnchors" type="as" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="DNSSECSupported" type="b" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+	</interface>
+</node>

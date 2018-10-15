@@ -1,0 +1,86 @@
+<node>
+	<interface name="org.freedesktop.DBus.Properties">
+		<method name="Get">
+			<arg name="interface_name" type="s" direction="in"></arg>
+			<arg name="property_name" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="out"></arg>
+		</method>
+		<method name="GetAll">
+			<arg name="interface_name" type="s" direction="in"></arg>
+			<arg name="properties" type="a{sv}" direction="out"></arg>
+		</method>
+		<method name="Set">
+			<arg name="interface_name" type="s" direction="in"></arg>
+			<arg name="property_name" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="in"></arg>
+		</method>
+		<signal name="PropertiesChanged">
+			<arg name="interface_name" type="s"></arg>
+			<arg name="changed_properties" type="a{sv}"></arg>
+			<arg name="invalidated_properties" type="as"></arg>
+		</signal>
+	</interface>
+	<interface name="org.freedesktop.DBus.Introspectable">
+		<method name="Introspect">
+			<arg name="xml_data" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.Peer">
+		<method name="Ping"></method>
+		<method name="GetMachineId">
+			<arg name="machine_uuid" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.gnome.DisplayManager.Manager">
+		<method name="RegisterDisplay">
+			<arg name="details" type="a{ss}" direction="in"></arg>
+		</method>
+		<method name="OpenSession">
+			<arg name="address" type="s" direction="out"></arg>
+		</method>
+		<method name="OpenReauthenticationChannel">
+			<arg name="username" type="s" direction="in"></arg>
+			<arg name="address" type="s" direction="out"></arg>
+		</method>
+		<property name="Version" type="s" access="read"></property>
+	</interface>
+	<interface name="org.gnome.DisplayManager.LocalDisplayFactory">
+		<method name="CreateTransientDisplay">
+			<arg name="id" type="o" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.ObjectManager">
+		<method name="GetManagedObjects">
+			<arg name="object_paths_interfaces_and_properties" type="a{oa{sa{sv}}}" direction="out"></arg>
+		</method>
+		<signal name="InterfacesAdded">
+			<arg name="object_path" type="o"></arg>
+			<arg name="interfaces_and_properties" type="a{sa{sv}}"></arg>
+		</signal>
+		<signal name="InterfacesRemoved">
+			<arg name="object_path" type="o"></arg>
+			<arg name="interfaces" type="as"></arg>
+		</signal>
+	</interface>
+	<interface name="org.gnome.DisplayManager.LocalDisplay"></interface>
+	<interface name="org.gnome.DisplayManager.Display">
+		<method name="GetId">
+			<arg name="id" type="o" direction="out"></arg>
+		</method>
+		<method name="GetX11DisplayName">
+			<arg name="name" type="s" direction="out"></arg>
+		</method>
+		<method name="GetSeatId">
+			<arg name="filename" type="s" direction="out"></arg>
+		</method>
+		<method name="IsInitial">
+			<arg name="initial" type="b" direction="out"></arg>
+		</method>
+		<method name="GetRemoteHostname">
+			<arg name="hostname" type="s" direction="out"></arg>
+		</method>
+		<method name="IsLocal">
+			<arg name="local" type="b" direction="out"></arg>
+		</method>
+	</interface>
+</node>

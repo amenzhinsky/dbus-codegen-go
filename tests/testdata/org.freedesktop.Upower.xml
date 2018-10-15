@@ -1,0 +1,135 @@
+<node>
+	<interface name="org.freedesktop.DBus.Properties">
+		<method name="Get">
+			<arg name="interface_name" type="s" direction="in"></arg>
+			<arg name="property_name" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="out"></arg>
+		</method>
+		<method name="GetAll">
+			<arg name="interface_name" type="s" direction="in"></arg>
+			<arg name="properties" type="a{sv}" direction="out"></arg>
+		</method>
+		<method name="Set">
+			<arg name="interface_name" type="s" direction="in"></arg>
+			<arg name="property_name" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="in"></arg>
+		</method>
+		<signal name="PropertiesChanged">
+			<arg name="interface_name" type="s"></arg>
+			<arg name="changed_properties" type="a{sv}"></arg>
+			<arg name="invalidated_properties" type="as"></arg>
+		</signal>
+	</interface>
+	<interface name="org.freedesktop.DBus.Introspectable">
+		<method name="Introspect">
+			<arg name="xml_data" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.Peer">
+		<method name="Ping"></method>
+		<method name="GetMachineId">
+			<arg name="machine_uuid" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.UPower">
+		<method name="EnumerateDevices">
+			<arg name="devices" type="ao" direction="out"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="GetDisplayDevice">
+			<arg name="device" type="o" direction="out"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="GetCriticalAction">
+			<arg name="action" type="s" direction="out"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<signal name="DeviceAdded">
+			<arg name="device" type="o"></arg>
+		</signal>
+		<signal name="DeviceRemoved">
+			<arg name="device" type="o"></arg>
+		</signal>
+		<property name="DaemonVersion" type="s" access="read"></property>
+		<property name="OnBattery" type="b" access="read"></property>
+		<property name="LidIsClosed" type="b" access="read"></property>
+		<property name="LidIsPresent" type="b" access="read"></property>
+	</interface>
+	<interface name="org.freedesktop.UPower.Device">
+		<method name="Refresh">
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="GetHistory">
+			<arg name="type" type="s" direction="in"></arg>
+			<arg name="timespan" type="u" direction="in"></arg>
+			<arg name="resolution" type="u" direction="in"></arg>
+			<arg name="data" type="a(udu)" direction="out"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<method name="GetStatistics">
+			<arg name="type" type="s" direction="in"></arg>
+			<arg name="data" type="a(dd)" direction="out"></arg>
+			<annotation name="org.freedesktop.DBus.GLib.Async" value=""></annotation>
+		</method>
+		<property name="NativePath" type="s" access="read"></property>
+		<property name="Vendor" type="s" access="read"></property>
+		<property name="Model" type="s" access="read"></property>
+		<property name="Serial" type="s" access="read"></property>
+		<property name="UpdateTime" type="t" access="read"></property>
+		<property name="Type" type="u" access="read"></property>
+		<property name="PowerSupply" type="b" access="read"></property>
+		<property name="HasHistory" type="b" access="read"></property>
+		<property name="HasStatistics" type="b" access="read"></property>
+		<property name="Online" type="b" access="read"></property>
+		<property name="Energy" type="d" access="read"></property>
+		<property name="EnergyEmpty" type="d" access="read"></property>
+		<property name="EnergyFull" type="d" access="read"></property>
+		<property name="EnergyFullDesign" type="d" access="read"></property>
+		<property name="EnergyRate" type="d" access="read"></property>
+		<property name="Voltage" type="d" access="read"></property>
+		<property name="Luminosity" type="d" access="read"></property>
+		<property name="TimeToEmpty" type="x" access="read"></property>
+		<property name="TimeToFull" type="x" access="read"></property>
+		<property name="Percentage" type="d" access="read"></property>
+		<property name="Temperature" type="d" access="read"></property>
+		<property name="IsPresent" type="b" access="read"></property>
+		<property name="State" type="u" access="read"></property>
+		<property name="IsRechargeable" type="b" access="read"></property>
+		<property name="Capacity" type="d" access="read"></property>
+		<property name="Technology" type="u" access="read"></property>
+		<property name="WarningLevel" type="u" access="read"></property>
+		<property name="BatteryLevel" type="u" access="read"></property>
+		<property name="IconName" type="s" access="read"></property>
+	</interface>
+	<interface name="org.freedesktop.UPower.KbdBacklight">
+		<method name="GetMaxBrightness">
+			<arg name="value" type="i" direction="out"></arg>
+		</method>
+		<method name="GetBrightness">
+			<arg name="value" type="i" direction="out"></arg>
+		</method>
+		<method name="SetBrightness">
+			<arg name="value" type="i" direction="in"></arg>
+		</method>
+		<signal name="BrightnessChanged">
+			<arg name="value" type="i"></arg>
+		</signal>
+		<signal name="BrightnessChangedWithSource">
+			<arg name="value" type="i"></arg>
+			<arg name="source" type="s"></arg>
+		</signal>
+	</interface>
+	<interface name="org.freedesktop.UPower.Wakeups">
+		<method name="GetTotal">
+			<arg name="value" type="u" direction="out"></arg>
+		</method>
+		<method name="GetData">
+			<arg name="data" type="a(budss)" direction="out"></arg>
+		</method>
+		<signal name="TotalChanged">
+			<arg name="value" type="u"></arg>
+		</signal>
+		<signal name="DataChanged"></signal>
+		<property name="HasCapability" type="b" access="read"></property>
+	</interface>
+</node>

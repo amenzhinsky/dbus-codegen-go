@@ -1,0 +1,69 @@
+<node>
+	<interface name="org.freedesktop.DBus.Peer">
+		<method name="Ping"></method>
+		<method name="GetMachineId">
+			<arg name="machine_uuid" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.Introspectable">
+		<method name="Introspect">
+			<arg name="data" type="s" direction="out"></arg>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.Properties">
+		<method name="Get">
+			<arg name="interface" type="s" direction="in"></arg>
+			<arg name="property" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="out"></arg>
+		</method>
+		<method name="GetAll">
+			<arg name="interface" type="s" direction="in"></arg>
+			<arg name="properties" type="a{sv}" direction="out"></arg>
+		</method>
+		<method name="Set">
+			<arg name="interface" type="s" direction="in"></arg>
+			<arg name="property" type="s" direction="in"></arg>
+			<arg name="value" type="v" direction="in"></arg>
+		</method>
+		<signal name="PropertiesChanged">
+			<arg name="interface" type="s"></arg>
+			<arg name="changed_properties" type="a{sv}"></arg>
+			<arg name="invalidated_properties" type="as"></arg>
+		</signal>
+	</interface>
+	<interface name="org.freedesktop.timedate1">
+		<method name="SetTime">
+			<arg type="x" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+		</method>
+		<method name="SetTimezone">
+			<arg type="s" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+		</method>
+		<method name="SetLocalRTC">
+			<arg type="b" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+		</method>
+		<method name="SetNTP">
+			<arg type="b" direction="in"></arg>
+			<arg type="b" direction="in"></arg>
+		</method>
+		<property name="Timezone" type="s" access="read"></property>
+		<property name="LocalRTC" type="b" access="read"></property>
+		<property name="CanNTP" type="b" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="NTP" type="b" access="read"></property>
+		<property name="NTPSynchronized" type="b" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="TimeUSec" type="t" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+		<property name="RTCTimeUSec" type="t" access="read">
+			<annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"></annotation>
+		</property>
+	</interface>
+</node>
