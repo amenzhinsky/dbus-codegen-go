@@ -27,6 +27,7 @@ func TestMain(m *testing.M) {
 // generated with: `dbus-codegen-go -xml -dest=X > testdata/X.xml`
 var xmlFiles = []string{
 	"testdata/net.connman.iwd.xml",
+	"testdata/org.bluez.xml",
 	"testdata/org.freedesktop.Accounts.xml",
 	"testdata/org.freedesktop.ColorManager.xml",
 	"testdata/org.freedesktop.DBus.xml",
