@@ -35,7 +35,8 @@ The tool will generate the following data structures:
   ```
   sig := LookupSignal(signal).(*My_Awesome_Interface_SomethingHappenedSignal)
   	fmt.Printf("%s %s", sig.Body().ObjectPath, sig.Body().What)
-  ```  
+  ```
+1. Annotations added to interfaces, methods, properties and signals as comments.
 
 ## Installation
 
