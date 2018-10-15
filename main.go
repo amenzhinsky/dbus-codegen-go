@@ -44,15 +44,13 @@ func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, `Usage: %s [FLAG...] [PATH...]
 
-Generates code from DBus org.freedesktop.DBus.Introspectable format.
-It introspects the named destination by providing -dest flag, reads 
-files passed as the command arguments or reads it from STDIN.
+Take D-Bus Introspection Data Format and generates go code for it.
 
 Flags:
 `, os.Args[0])
 		flag.PrintDefaults()
 	}
-	flag.StringVar(&destFlag, "dest", "", "destination name to introspect")
+	flag.StringVar(&destFlag, "dest", "", "DBus destination name to introspect")
 	flag.Var((*stringsFlag)(&onlyFlag), "only", "generate code only for the named interfaces")
 	flag.Var((*stringsFlag)(&exceptFlag), "except", "skip the named interfaces")
 	flag.BoolVar(&sessionFlag, "session", false, "connect to the session bus instead of the system")
