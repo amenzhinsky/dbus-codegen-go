@@ -10,7 +10,7 @@ API may change until 1.0.0, so please vendor the source code if you want to use 
 
 XML like this:
 
-```
+```xml
 <node>
 	<interface name="my.awesome.interface">
 		<method name="IToA">
@@ -32,10 +32,12 @@ The tool will generate the following data structures:
 1. `IToA` method attached to the structure: `(*My_Awesome_Interface) IToA(int64) (string, error)`.
 1. `Powered` property getter and setter: `(*My_Awesome_Interface) GetPowered() (bool, error)` and `(*My_Awesome_Interface) SetPowered(bool) error`.
 1. `My_Awesome_Interface_SomethingHappenedSignal` for typed access to signal body attributes and `LookupSignal(*dbus.Signal)` function for easy conversion:
-  ```
-  sig := LookupSignal(signal).(*My_Awesome_Interface_SomethingHappenedSignal)
-  	fmt.Printf("%s %s", sig.Body().ObjectPath, sig.Body().What)
-  ```
+
+   ```go
+   sig := LookupSignal(signal).(*My_Awesome_Interface_SomethingHappenedSignal)
+   fmt.Printf("%s %s", sig.Body().ObjectPath, sig.Body().What)
+   ```
+    
 1. Annotations added to interfaces, methods, properties and signals as comments.
 
 ## Installation
