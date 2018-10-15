@@ -9,6 +9,7 @@ import (
 	"github.com/godbus/dbus/introspect"
 )
 
+// Parse parses the given introspection XML into a list of interfaces.
 func Parse(b []byte) ([]*token.Interface, error) {
 	var node introspect.Node
 	if err := xml.Unmarshal(b, &node); err != nil {
@@ -17,6 +18,7 @@ func Parse(b []byte) ([]*token.Interface, error) {
 	return ParseNode(&node)
 }
 
+// ParseNode parses the given node, used to avoid double unmarshalling.
 func ParseNode(node *introspect.Node) ([]*token.Interface, error) {
 	if node == nil {
 		panic("node is nil")
