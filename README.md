@@ -83,14 +83,15 @@ You may also want to safe the introspection file that combines all interfaces in
 dbus-codegen-go -xml -dest=org.freedesktop.systemd1
 ```
 
-Here's an example of a bit more advanced usage, where we're changing the generated code's package name and narrow down the introspected interface to just two that we need:
+Here's an example of a bit more advanced usage, where we're changing the generated code's package name and narrow down the introspected interfaces to just two we need, plus we're trimming `org.freedesktop.systemd1` prefix to shorten generated structure names:
 
 ```
 dbus-codegen-go \
 	-dest=org.freedesktop.systemd1 \
 	-package=systemd \
 	-only=org.freedesktop.systemd1.Manager \
-	-only=org.freedesktop.systemd1.Service
+	-only=org.freedesktop.systemd1.Service \
+	-prefix=org.freedesktop.systemd1
 ```
 
 ## Testing
@@ -114,8 +115,7 @@ The generated output by `printer` package cannot be parsed by gofmt and that is 
 - server side code generation
 - add coding examples
 - sophisticated tests
-- more printer options, like trimming destination names or removing underscores from struct names
-
+- more printer options, like using Ugly_Case and CamelCase in interface names
 ## Contributing
 
 All contributions are welcome, just create an issue or issue a pull request.

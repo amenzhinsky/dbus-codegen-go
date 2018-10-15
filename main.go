@@ -17,13 +17,14 @@ import (
 )
 
 var (
-	destFlag    string
-	onlyFlag    []string
-	exceptFlag  []string
-	sessionFlag bool
-	packageFlag string
-	gofmtFlag   bool
-	xmlFlag     bool
+	destFlag     string
+	onlyFlag     []string
+	exceptFlag   []string
+	prefixesFlag []string
+	sessionFlag  bool
+	packageFlag  string
+	gofmtFlag    bool
+	xmlFlag      bool
 )
 
 type stringsFlag []string
@@ -53,6 +54,7 @@ Flags:
 	flag.StringVar(&destFlag, "dest", "", "DBus destination name to introspect")
 	flag.Var((*stringsFlag)(&onlyFlag), "only", "generate code only for the named interfaces")
 	flag.Var((*stringsFlag)(&exceptFlag), "except", "skip the named interfaces")
+	flag.Var((*stringsFlag)(&prefixesFlag), "prefix", "prefix to strip from interface names")
 	flag.BoolVar(&sessionFlag, "session", false, "connect to the session bus instead of the system")
 	flag.StringVar(&packageFlag, "package", "dbusgen", "generated package name")
 	flag.BoolVar(&gofmtFlag, "gofmt", true, "gofmt results")
@@ -129,6 +131,7 @@ func run() error {
 	return printer.Print(os.Stdout, filtered,
 		printer.WithPackageName(packageFlag),
 		printer.WithGofmt(gofmtFlag),
+		printer.WithPrefixes(prefixesFlag),
 	)
 }
 
