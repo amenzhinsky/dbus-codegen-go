@@ -69,6 +69,9 @@ Flags:
 
 func run() error {
 	var ifaces []*token.Interface
+	if destFlag == "" && xmlFlag {
+		return errors.New("flag -xml cannot be used without -dest flag")
+	}
 	if destFlag != "" {
 		if flag.NArg() > 0 {
 			return errors.New("cannot combine arguments and -dest flag")
