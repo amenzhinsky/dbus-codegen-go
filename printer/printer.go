@@ -218,7 +218,7 @@ func writeSignals(buf *buffer, iface *token.Interface) {
 type %s struct {
 	sender string
 	path   dbus.ObjectPath
-	body   %s
+	Body   %s
 }
 
 // %s is a body container. 
@@ -245,11 +245,6 @@ func (s *%s) Sender() string {
 func (s *%s) Path() dbus.ObjectPath {
 	return s.path
 }
-
-// Body returns the signals' payload.
-func (s *%s) Body() %s {
-	return s.body
-}
 `,
 			signalType(iface, sig), iface.Name, sig.Name,
 			signalType(iface, sig), signalBodyType(iface, sig),
@@ -259,7 +254,6 @@ func (s *%s) Body() %s {
 			signalType(iface, sig), ifaceNameConst(iface),
 			signalType(iface, sig),
 			signalType(iface, sig),
-			signalType(iface, sig), signalBodyType(iface, sig),
 		)
 	}
 }
@@ -283,7 +277,7 @@ func LookupSignal(signal *dbus.Signal) Signal {
 		return &%s{
 			sender: signal.Sender,
 			path:   signal.Path,
-			body:   %s{
+			Body:   %s{
 `,
 				ifaceNameConst(iface), sig.Name,
 				signalType(iface, sig),
