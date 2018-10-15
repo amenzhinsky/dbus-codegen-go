@@ -12,17 +12,17 @@ XML like this:
 
 ```
 <node>
-    <interface name="my.awesome.interface">
-        <method name="IToA">
-            <arg name="In" type="x" direction="in" />
-            <arg name="Out" type="s" direction="out" />
-        </method>
-        <property name="Powered" type="b" access="readwrite" />
-        <signal name="SomethingHappened">
-            <arg name="object_path" type="o" />
-            <arg name="what" type="s" />
-        </signal>
-    </interface>
+	<interface name="my.awesome.interface">
+		<method name="IToA">
+			<arg name="In" type="x" direction="in" />
+			<arg name="Out" type="s" direction="out" />
+		</method>
+		<property name="Powered" type="b" access="readwrite" />
+		<signal name="SomethingHappened">
+			<arg name="object_path" type="o" />
+			<arg name="what" type="s" />
+		</signal>
+	</interface>
 </node>
 ```
 
@@ -110,7 +110,8 @@ The generated output by `printer` package cannot be parsed by gofmt and that is 
 
 ## TODO
 
-- server side generation
+- support annotations
+- server side code generation
 - add coding examples
 - sophisticated tests
 - more printer options, like trimming destination names or removing underscores from struct names
