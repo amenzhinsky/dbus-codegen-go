@@ -44,32 +44,28 @@ var xmlFiles = []string{
 	"testdata/org.gnome.DisplayManager.xml",
 }
 
+func xmlFilesAndAll() [][]string {
+	all := make([][]string, 0, len(xmlFiles)+1)
+	for _, file := range xmlFiles {
+		all = append(all, []string{file})
+	}
+	return append(all, xmlFiles)
+}
+
 func TestHashSum(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
-	for _, tc := range xmlFiles {
-		file := tc
-		t.Run(file, func(t *testing.T) {
+	for _, tc := range xmlFilesAndAll() {
+		files := tc
+		t.Run(strings.Join(files, "/"), func(t *testing.T) {
 			t.Parallel()
-			checkHashSum(t, file)
+			h1 := sha256.Sum256(run(t, files...))
+			h2 := sha256.Sum256(run(t, files...))
+			if h1 != h2 {
+				t.Errorf("hashsums for %v are different over multiple runs", files)
+			}
 		})
-	}
-}
-
-func TestHashSumAll(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping test in short mode")
-	}
-	t.Parallel()
-	checkHashSum(t, xmlFiles...)
-}
-
-func checkHashSum(t *testing.T, files ...string) {
-	h1 := sha256.Sum256(run(t, files...))
-	h2 := sha256.Sum256(run(t, files...))
-	if h1 != h2 {
-		t.Errorf("hashsums for %v are different over multiple runs", files)
 	}
 }
 
@@ -77,21 +73,13 @@ func TestItCompiles(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
-	for _, tc := range xmlFiles {
-		file := tc
-		t.Run(file, func(t *testing.T) {
+	for _, tc := range xmlFilesAndAll() {
+		files := tc
+		t.Run(strings.Join(files, "/"), func(t *testing.T) {
 			t.Parallel()
-			checkCompile(t, "testdata/test_it_compiles.gof", file)
+			checkCompile(t, "testdata/test_it_compiles.gof", files)
 		})
 	}
-}
-
-func TestItCompilesAll(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping test in short mode")
-	}
-	t.Parallel()
-	checkCompile(t, "testdata/test_it_compiles.gof", xmlFiles...)
 }
 
 func TestCompile(t *testing.T) {
@@ -106,12 +94,12 @@ func TestCompile(t *testing.T) {
 		goFile, xmlFiles := tc[0], tc[1:]
 		t.Run(goFile+"_"+strings.Join(xmlFiles, "-"), func(t *testing.T) {
 			t.Parallel()
-			checkCompile(t, goFile, xmlFiles...)
+			checkCompile(t, goFile, xmlFiles)
 		})
 	}
 }
 
-func checkCompile(t *testing.T, goFile string, xmlFiles ...string) {
+func checkCompile(t *testing.T, goFile string, xmlFiles []string) {
 	t.Helper()
 	b := run(t, append([]string{"-package", "main"}, xmlFiles...)...)
 	if err := compile(b, goFile); err != nil {
