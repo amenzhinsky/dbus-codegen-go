@@ -17,11 +17,11 @@ import (
 )
 
 var (
-	destFlag     string
+	destFlag     []string
 	onlyFlag     []string
 	exceptFlag   []string
 	prefixesFlag []string
-	sessionFlag  bool
+	systemFlag   bool
 	packageFlag  string
 	gofmtFlag    bool
 	xmlFlag      bool
@@ -33,11 +33,13 @@ func (ss *stringsFlag) String() string {
 	return "[" + strings.Join(*ss, ", ") + "]"
 }
 
-func (ss *stringsFlag) Set(s string) error {
-	if s = strings.Trim(s, " "); s == "" {
-		return errors.New("string is empty")
+func (ss *stringsFlag) Set(arg string) error {
+	for _, s := range strings.Split(arg, ",") {
+		if s == "" {
+			continue
+		}
+		*ss = append(*ss, s)
 	}
-	*ss = append(*ss, s)
 	return nil
 }
 
@@ -51,11 +53,11 @@ Flags:
 `, os.Args[0])
 		flag.PrintDefaults()
 	}
-	flag.StringVar(&destFlag, "dest", "", "DBus destination name to introspect")
+	flag.Var((*stringsFlag)(&destFlag), "dest", "destination name(s) to introspect")
 	flag.Var((*stringsFlag)(&onlyFlag), "only", "generate code only for the named interfaces")
 	flag.Var((*stringsFlag)(&exceptFlag), "except", "skip the named interfaces")
 	flag.Var((*stringsFlag)(&prefixesFlag), "prefix", "prefix to strip from interface names")
-	flag.BoolVar(&sessionFlag, "session", false, "connect to the session bus instead of the system")
+	flag.BoolVar(&systemFlag, "system", false, "connect to the system bus")
 	flag.StringVar(&packageFlag, "package", "dbusgen", "generated package name")
 	flag.BoolVar(&gofmtFlag, "gofmt", true, "gofmt results")
 	flag.BoolVar(&xmlFlag, "xml", false, "combine the dest's introspections into a single document")
@@ -69,21 +71,21 @@ Flags:
 
 func run() error {
 	var ifaces []*token.Interface
-	if destFlag == "" && xmlFlag {
+	if len(destFlag) == 0 && xmlFlag {
 		return errors.New("flag -xml cannot be used without -dest flag")
 	}
-	if destFlag != "" {
+	if len(destFlag) != 0 {
 		if flag.NArg() > 0 {
 			return errors.New("cannot combine arguments and -dest flag")
 		}
-		conn, err := connect(sessionFlag)
+		conn, err := connect(systemFlag)
 		if err != nil {
 			return err
 		}
 		defer conn.Close()
 
 		if xmlFlag {
-			b, err := generateXml(conn, destFlag)
+			b, err := generateXML(conn, destFlag)
 			if err != nil {
 				return err
 			}
@@ -135,65 +137,67 @@ func run() error {
 	)
 }
 
-func connect(session bool) (*dbus.Conn, error) {
-	if session {
-		return dbus.SessionBus()
+func connect(system bool) (*dbus.Conn, error) {
+	if system {
+		return dbus.SystemBus()
 	}
-	return dbus.SystemBus()
+	return dbus.SessionBus()
 }
 
-func parseDest(conn *dbus.Conn, dest string) ([]*token.Interface, error) {
+func parseDest(conn *dbus.Conn, dests []string) ([]*token.Interface, error) {
 	ifaces := make([]*token.Interface, 0, 16)
-	if err := introspectDest(conn, dest, "/", func(node *introspect.Node) error {
-		chunk, err := parser.ParseNode(node)
-		if err != nil {
-			return err
+	for _, dest := range dests {
+		if err := introspectDest(conn, dest, "/", func(node *introspect.Node) error {
+			chunk, err := parser.ParseNode(node)
+			if err != nil {
+				return err
+			}
+			ifaces = merge(ifaces, chunk)
+			return nil
+		}); err != nil {
+			return nil, err
 		}
-		ifaces = merge(ifaces, chunk)
-		return nil
-	}); err != nil {
-		return nil, err
 	}
 	return ifaces, nil
 }
 
-func generateXml(conn *dbus.Conn, dest string) ([]byte, error) {
-	var node introspect.Node
-	if err := introspectDest(conn, dest, "/", func(n *introspect.Node) error {
-		for _, iface := range n.Interfaces {
-			var found bool
-			for _, ifc := range node.Interfaces {
-				if ifc.Name == iface.Name {
-					found = true
-					break
+func generateXML(conn *dbus.Conn, dests []string) ([]byte, error) {
+	var ifaces []introspect.Interface
+	for _, dest := range dests {
+		if err := introspectDest(conn, dest, "/", func(n *introspect.Node) error {
+			for _, ifn := range n.Interfaces {
+				var found bool
+				for _, ifc := range ifaces {
+					if ifc.Name == ifn.Name {
+						found = true
+						break
+					}
+				}
+				if !found {
+					ifaces = append(ifaces, ifn)
 				}
 			}
-			if !found {
-				node.Interfaces = append(node.Interfaces, iface)
-			}
+			return nil
+		}); err != nil {
+			return nil, err
 		}
-		return nil
-	}); err != nil {
-		return nil, err
 	}
-	b, err := xml.MarshalIndent(&node, "", "\t")
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
+	return xml.MarshalIndent(&introspect.Node{
+		Interfaces: ifaces,
+	}, "", "\t")
 }
 
 func merge(curr, next []*token.Interface) []*token.Interface {
-	for j := range next {
+	for _, ifn := range next {
 		var found bool
-		for i := range curr {
-			if curr[i].Name == next[j].Name {
+		for _, ifc := range curr {
+			if ifc.Name == ifn.Name {
 				found = true
 				break
 			}
 		}
 		if !found {
-			curr = append(curr, next[j])
+			curr = append(curr, ifn)
 		}
 	}
 	return curr

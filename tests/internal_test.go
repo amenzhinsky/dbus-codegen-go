@@ -82,7 +82,7 @@ func build() (string, error) {
 		return "", err
 	}
 	if b, err := exec.Command(
-		"go", "build", "-ldflags=-s", "-o", f.Name(), "./..",
+		"go", "build", "-ldflags=-s", "-o", f.Name(), "./../cmd/dbus-codegen-go",
 	).CombinedOutput(); err != nil {
 		return "", fmt.Errorf("binary compilation error: %s", string(b))
 	}

@@ -31,12 +31,7 @@ The tool will generate the following data structures:
 1. Structure `My_Awesome_Interface`, that can be created with `NewMy_Awesome_Interface(object)` or via `InterfaceLookup(object, "my.awesome.interface").(*My_Awesome_Interface)` in case you have more than one interface.
 1. `IToA` method attached to the structure: `(*My_Awesome_Interface) IToA(int64) (string, error)`.
 1. `Powered` property getter and setter: `(*My_Awesome_Interface) GetPowered() (bool, error)` and `(*My_Awesome_Interface) SetPowered(bool) error`.
-1. `My_Awesome_Interface_SomethingHappenedSignal` for typed access to signal body attributes and `LookupSignal(*dbus.Signal)` function for easy conversion:
-
-   ```go
-   sig := LookupSignal(signal).(*My_Awesome_Interface_SomethingHappenedSignal)
-   fmt.Printf("%s %s", sig.Body().ObjectPath, sig.Body().What)
-   ```
+1. `My_Awesome_Interface_SomethingHappenedSignal` for typed access to signal body attributes, `LookupSignal(*dbus.Signal) Signal` and `AddMatchRule(*dbus.Signal) string` helper functions, see usage in the [examples](#examples) section.
     
 1. Annotations added to interfaces, methods, properties and signals as comments.
 
@@ -58,7 +53,7 @@ go build
 
 ## Usage
 
-The program reads files provided as command-line arguments or reads the stdin if none given:
+The program treats command-line arguments as paths to XML files or reads out **stdin** if none given:
 
 ```
 dbus-send --system \
@@ -73,7 +68,7 @@ dbus-codegen-go org.freedesktop.systemd1.xml
 dbus-codegen-go < org.freedesktop.systemd1.xml
 ```
 
-Apart of reading existing files it can introspect destinations on locally running D-Bus: 
+Apart of reading existing files it can introspect real D-Bus destinations recursively: 
 
 ```
 dbus-codegen-go -dest=org.freedesktop.systemd1
@@ -85,7 +80,7 @@ You may also want to safe the introspection file that combines all interfaces in
 dbus-codegen-go -xml -dest=org.freedesktop.systemd1
 ```
 
-Here's an example of a bit more advanced usage, where we're changing the generated code's package name and narrow down the introspected interfaces to just two we need, plus we're trimming `org.freedesktop.systemd1` prefix to shorten generated structure names:
+Here's an example of a bit more advanced usage, where we're changing the generated code's package name and narrow down the introspected interfaces to just two we need, plus we're trimming `org.freedesktop` prefix to shorten generated structure names:
 
 ```
 dbus-codegen-go \
@@ -94,6 +89,64 @@ dbus-codegen-go \
 	-only=org.freedesktop.systemd1.Manager \
 	-only=org.freedesktop.systemd1.Service \
 	-prefix=org.freedesktop.systemd1
+```
+
+## Examples
+
+The following example subscribes to all `PropertyChanged` signals from `org.freedesktop.systemd1` destination.
+
+The generated code is generated with:
+
+```
+dbus-codegen-go \
+	-package=main
+	-dest=org.freedesktop.DBus \
+	-dest=org.freedesktop.systemd1 
+```
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/godbus/dbus"
+)
+
+func main() {
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
+	conn, err := dbus.SystemBus()
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	sigc := make(chan *dbus.Signal, 1)
+	conn.Signal(sigc)
+	defer conn.RemoveSignal(sigc)
+
+	bus := NewOrg_Freedesktop_DBus(conn.BusObject())
+	if err := bus.AddMatch(
+		AddMatchRule((*Org_Freedesktop_DBus_Properties_PropertiesChangedSignal)(nil)) +
+			",sender='org.freedesktop.systemd1'",
+	); err != nil {
+		return err
+	}
+	for sig := range sigc {
+		switch v := LookupSignal(sig).(type) {
+		case *Org_Freedesktop_DBus_Properties_PropertiesChangedSignal:
+			fmt.Printf("%s %s: %v\n", v.Path(), v.Body.Interface, v.Body.ChangedProperties)
+		}
+	}
+	return nil
+}
 ```
 
 ## Testing
@@ -118,6 +171,7 @@ The generated output by `printer` package cannot be parsed by gofmt and that is 
 - add coding examples
 - sophisticated tests
 - more printer options, like using Ugly_Case and CamelCase in interface names
+
 ## Contributing
 
 All contributions are welcome, just create an issue or issue a pull request.

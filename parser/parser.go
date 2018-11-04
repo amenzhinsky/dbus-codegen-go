@@ -55,8 +55,8 @@ func parseProperties(props []introspect.Property) []*token.Property {
 		properties[i] = &token.Property{
 			Name:        props[i].Name,
 			Arg:         parseArg(props[i].Name, props[i].Type),
-			Read:        strings.Index(props[i].Access, "read") != -1,
-			Write:       strings.Index(props[i].Access, "write") != -1,
+			Read:        strings.Contains(props[i].Access, "read"),
+			Write:       strings.Contains(props[i].Access, "write"),
 			Annotations: parseAnnotations(props[i].Annotations),
 		}
 	}

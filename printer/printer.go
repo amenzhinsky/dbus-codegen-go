@@ -143,7 +143,11 @@ func (p *printer) writeHeader(pkgName string, ifaces []*token.Interface) {
 	p.writef(`
 package %s
 
-import "github.com/godbus/dbus"
+import (
+	"log"
+
+	"github.com/godbus/dbus"
+)
 
 const (
 	methodPropertyGet = "org.freedesktop.DBus.Properties.Get"
@@ -159,6 +163,8 @@ func (p *printer) writeAnnotations(annotations []*token.Annotation) {
 }
 
 func (p *printer) writeInterface(iface *token.Interface) {
+	p.writef("// %s is %s interface name.\n", p.ifaceNameConst(iface), iface.Name)
+	p.writef("const %s = %q\n", p.ifaceNameConst(iface), iface.Name)
 	p.writef(`// %s creates and allocates %s.
 func %s(object dbus.BusObject) *%s {
 	return &%s{object}
@@ -289,17 +295,23 @@ func LookupSignal(signal *dbus.Signal) Signal {
 	for _, iface := range ifaces {
 		for _, sig := range iface.Signals {
 			p.writef(`	case %s + "." + "%s":
-		return &%s{
+`, p.ifaceNameConst(iface), sig.Name)
+			for i, arg := range sig.Args {
+				p.writef("		v%d, ok := signal.Body[%d].(%s)\n", i, i, arg.Type)
+				p.writef(`		if !ok {
+			log.Printf("[dbusgen] %s is %%T, not %s", signal.Body[%d])
+		}
+`,
+					p.argName(arg, "v", i, true), arg.Type, i)
+			}
+			p.writef(`		return &%s{
 			sender: signal.Sender,
 			path:   signal.Path,
 			Body:   %s{
-`,
-				p.ifaceNameConst(iface), sig.Name,
-				p.signalType(iface, sig),
-				p.signalBodyType(iface, sig),
+`, p.signalType(iface, sig), p.signalBodyType(iface, sig),
 			)
 			for i, arg := range sig.Args {
-				p.writef("				%s: signal.Body[%d].(%s),\n", p.argName(arg, "v", i, true), i, arg.Type)
+				p.writef("				%s: v%d,\n", p.argName(arg, "v", i, true), i)
 			}
 			p.writeln("			},")
 			p.writeln("		}")
@@ -310,16 +322,14 @@ func LookupSignal(signal *dbus.Signal) Signal {
 	}
 }
 `)
+	p.writef(`// AddMatchRule returns AddMatch rule for the given signal. 
+func AddMatchRule(sig Signal) string {
+	return "type='signal',interface='" + sig.Interface() + "',member='" + sig.Name() + "'"
+}
+`)
 }
 
 func (p *printer) writeInterfaceFuncs(ifaces []*token.Interface) {
-	p.writeln("// interface names")
-	p.writeln("const (")
-	for _, iface := range ifaces {
-		p.writef("	%s = %q\n", p.ifaceNameConst(iface), iface.Name)
-	}
-	p.writeln(")")
-
 	p.writef(`// Interface is a DBus interface implementation.
 type Interface interface {
 	iface() string
@@ -346,7 +356,7 @@ func isKeyword(s string) bool {
 	return gotoken.Lookup(s).IsKeyword()
 }
 
-var ifaceRegexp = regexp.MustCompile("\\.[a-zA-Z0-9]")
+var ifaceRegexp = regexp.MustCompile(`\.[a-zA-Z0-9]`)
 
 func (p *printer) ifaceType(iface *token.Interface) string {
 	name := iface.Name
