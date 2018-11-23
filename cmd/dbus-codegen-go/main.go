@@ -47,7 +47,7 @@ func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, `Usage: %s [FLAG...] [PATH...]
 
-Take D-Bus Introspection Data Format and generates go code for it.
+Takes D-Bus Introspection Data Format and generates go code for it.
 
 Flags:
 `, os.Args[0])

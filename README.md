@@ -39,13 +39,13 @@ The tool will generate the following data structures:
 
 You can install it with `go get` withing `$GOPATH` or a module (**go1.11** has issues with binaries installation outside of a module):
 
-```
+```bash
 go get -u github.com/amenzhinsky/dbus-codegen-go/cmd/dbus-codegen-go
 ```
 
 Or clone the repo and build it manually:
 
-```
+```bash
 git clone https://github.com/amenzhinsky/dbus-codegen-go.git
 cd dbus-codegen-go
 go build
@@ -55,7 +55,7 @@ go build
 
 The program treats command-line arguments as paths to XML files or reads out **stdin** if none given:
 
-```
+```bash
 dbus-send --system \
 	--type=method_call \
 	--print-reply=literal \
@@ -70,19 +70,19 @@ dbus-codegen-go < org.freedesktop.systemd1.xml
 
 Apart of reading existing files it can introspect real D-Bus destinations recursively: 
 
-```
+```bash
 dbus-codegen-go -dest=org.freedesktop.systemd1
 ```
 
 You may also want to safe the introspection file that combines all interfaces in the tree on some system for further reuse. For that simply add `-xml` flag:
 
-```
+```bash
 dbus-codegen-go -xml -dest=org.freedesktop.systemd1
 ```
 
 Here's an example of a bit more advanced usage, where we're changing the generated code's package name and narrow down the introspected interfaces to just two we need, plus we're trimming `org.freedesktop` prefix to shorten generated structure names:
 
-```
+```bash
 dbus-codegen-go \
 	-dest=org.freedesktop.systemd1 \
 	-package=systemd \
@@ -97,9 +97,9 @@ The following example subscribes to all `PropertyChanged` signals from `org.free
 
 The generated code is generated with:
 
-```
+```bash
 dbus-codegen-go \
-	-package=main
+	-package=main \
 	-dest=org.freedesktop.DBus \
 	-dest=org.freedesktop.systemd1 
 ```
@@ -153,7 +153,7 @@ func run() error {
 
 To test the package simply run:
 
-```
+```bash
 go test ./...
 ```
 
@@ -167,6 +167,7 @@ The generated output by `printer` package cannot be parsed by gofmt and that is 
 
 ## TODO
 
+- name conflicts resolver
 - server side code generation
 - add coding examples
 - sophisticated tests
