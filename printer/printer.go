@@ -89,6 +89,9 @@ const (
 	methodPropertySet = "org.freedesktop.DBus.Properties.Set"
 )
 
+// Avoid error caused by unused log import
+var _ = log.Printf
+
 // Interface is a DBus interface implementation.
 type Interface interface {
 	iface() string
