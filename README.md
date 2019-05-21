@@ -29,8 +29,8 @@ XML like this:
 The tool will generate the following data structures:
 
 1. Structure `My_Awesome_Interface`, that can be created with `NewMy_Awesome_Interface(object)` or via `InterfaceLookup(object, "my.awesome.interface").(*My_Awesome_Interface)` in case you have more than one interface.
-1. `IToA` method attached to the structure: `(*My_Awesome_Interface) IToA(int64) (string, error)`.
-1. `Powered` property getter and setter: `(*My_Awesome_Interface) GetPowered() (bool, error)` and `(*My_Awesome_Interface) SetPowered(bool) error`.
+1. `IToA` method attached to the structure: `(*My_Awesome_Interface) IToA(context.Context, int64) (string, error)`.
+1. `Powered` property getter and setter: `(*My_Awesome_Interface) GetPowered(context.Context) (bool, error)` and `(*My_Awesome_Interface) SetPowered(context.Context, bool) error`.
 1. `My_Awesome_Interface_SomethingHappenedSignal` for typed access to signal body attributes, `LookupSignal(*dbus.Signal) Signal` and `AddMatchRule(*dbus.Signal) string` helper functions, see usage in the [examples](#examples) section.
     
 1. Annotations added to interfaces, methods, properties and signals as comments.

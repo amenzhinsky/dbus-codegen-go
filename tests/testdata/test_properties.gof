@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -22,6 +23,6 @@ func run() error {
 	defer conn.Close()
 
 	o := NewOrg_Freedesktop_DBus(conn.Object("org.freedesktop.DBus", "/org/freedesktop/DBus"))
-	_, err = o.GetInterfaces()
+	_, err = o.GetInterfaces(context.Background())
 	return err
 }
