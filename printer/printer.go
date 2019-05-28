@@ -80,9 +80,9 @@ package {{ .PackageName }}
 
 import (
 	"context"
-	"log"
+	"errors"
+	"fmt"
 
-	// requires >= v5.0.0
 	"github.com/godbus/dbus"
 )
 
@@ -116,8 +116,12 @@ type Signal interface {
 	Path()      dbus.ObjectPath
 }
 
-// LookupSignal converts the given raw DBus signal into typed one or returns nil.
-func LookupSignal(signal *dbus.Signal) Signal {
+// ErrUnknownSignal is returned by LookupSignal when a signal cannot be resolved.
+var ErrUnknownSignal = errors.New("unknown signal")
+
+// LookupSignal converts the given raw D-Bus signal with variable body 
+// into one with typed structured body or returns ErrUnknownSignal error.
+func LookupSignal(signal *dbus.Signal) (Signal, error) {
 	switch signal.Name {
 {{- range $iface := .Interfaces }}
 {{- range $signal := $iface.Signals }}
@@ -125,7 +129,7 @@ func LookupSignal(signal *dbus.Signal) Signal {
 {{- range $i, $argument := $signal.Args }}
 		v{{ $i }}, ok := signal.Body[{{ $i }}].({{ $argument.Type }})
 		if !ok {
-			log.Printf("[{{ $.PackageName }}] {{ argName $argument "v" $i true }} is %T, not {{ $argument.Type }}", signal.Body[{{ $i }}])
+			return nil, fmt.Errorf("prop .{{ argName $argument "v" $i true }} is %T, not {{ $argument.Type }}", signal.Body[{{ $i }}])
 		}
 {{- end }}
 		return &{{ signalType $iface $signal }}{
@@ -136,11 +140,11 @@ func LookupSignal(signal *dbus.Signal) Signal {
 				{{ argName $argument "v" $i true }}: v{{ $i }},
 {{- end }}
 			},
-		}
+		}, nil
 {{- end }}
 {{- end }}
 	default:
-		return nil
+		return nil, ErrUnknownSignal
 	}
 }
 

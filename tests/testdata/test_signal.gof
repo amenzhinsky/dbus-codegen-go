@@ -36,7 +36,11 @@ func run() error {
 		return errors.New("unexpected return code")
 	}
 Retry:
-	sig := LookupSignal(<-sigc).(*Org_Freedesktop_DBus_NameAcquiredSignal)
+	s, err := LookupSignal(<-sigc)
+	if err != nil {
+		return err
+	}
+	sig := s.(*Org_Freedesktop_DBus_NameAcquiredSignal)
 	if sig.Body.V0[0] == ':' {
 		goto Retry
 	}
