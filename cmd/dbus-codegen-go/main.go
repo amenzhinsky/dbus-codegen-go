@@ -74,7 +74,8 @@ func run() error {
 	if len(destFlag) == 0 && xmlFlag {
 		return errors.New("flag -xml cannot be used without -dest flag")
 	}
-	if len(destFlag) != 0 {
+	switch {
+	case len(destFlag) != 0:
 		if flag.NArg() > 0 {
 			return errors.New("cannot combine arguments and -dest flag")
 		}
@@ -96,7 +97,7 @@ func run() error {
 		if err != nil {
 			return err
 		}
-	} else if flag.NArg() > 0 {
+	case flag.NArg() > 0:
 		for _, filename := range flag.Args() {
 			b, err := ioutil.ReadFile(filename)
 			if err != nil {
@@ -108,7 +109,7 @@ func run() error {
 			}
 			ifaces = merge(ifaces, chunk)
 		}
-	} else {
+	default:
 		b, err := ioutil.ReadAll(os.Stdin)
 		if err != nil {
 			return err
