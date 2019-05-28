@@ -37,7 +37,7 @@ The tool will generate the following data structures:
 
 ## Installation
 
-You can install it with `go get` withing `$GOPATH` or a module (**go1.11** has issues with binaries installation outside of a module):
+You can install it with `go get`:
 
 ```bash
 go get -u github.com/amenzhinsky/dbus-codegen-go/cmd/dbus-codegen-go
