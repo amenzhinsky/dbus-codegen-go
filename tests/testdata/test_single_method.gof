@@ -22,10 +22,9 @@ func run() error {
 	}
 	defer conn.Close()
 
-	o := LookupInterface(
+	o := NewOrg_Freedesktop_DBus(
 		conn.Object("org.freedesktop.DBus", "/org/freedesktop/DBus"),
-		"org.freedesktop.DBus",
-	).(*Org_Freedesktop_DBus)
+	)
 	if _, err := o.GetId(context.Background()); err != nil {
 		return err
 	}

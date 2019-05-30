@@ -89,23 +89,6 @@ import (
 	"github.com/godbus/dbus"
 )
 
-// Interface is a DBus interface implementation.
-type Interface interface {
-	iface() string
-}
-
-// LookupInterface returns an interface for the named object.
-func LookupInterface(object dbus.BusObject, iface string) Interface {
-	switch iface {
-{{- range $iface := .Interfaces }}
-	case {{ ifaceNameConst $iface }}:
-		return New{{ ifaceType $iface }}(object)
-{{- end }}
-	default:
-		return nil
-	}
-}
-
 {{if haveSignals .Interfaces}}
 // Signal is a common interface for all signals.
 type Signal interface {
@@ -176,15 +159,11 @@ type {{ ifaceType $iface }} struct {
 	object dbus.BusObject
 }
 
-// iface implements the Interface interface.
-func (o *{{ ifaceType $iface }}) iface() string {
-	return {{ ifaceNameConst $iface }}
-}
 {{ range $method := $iface.Methods }}
 // {{ methodType $method }} calls {{ $iface.Name }}.{{ $method.Name }} method.
 {{- template "annotations" $method }}
 func (o *{{ ifaceType $iface }}) {{ methodType $method }}(ctx context.Context, {{ joinMethodInArgs $method }}) ({{ joinMethodOutArgs $method }}err error) {
-	err = o.object.CallWithContext(ctx, {{ ifaceNameConst $iface }} + "." + "{{ $method.Name }}", 0, {{ joinArgNames $method.In }}).Store({{ joinStoreArgs $method.Out }})
+	err = o.object.CallWithContext(ctx, "{{ $iface.Name }}.{{ $method.Name }}", 0, {{ joinArgNames $method.In }}).Store({{ joinStoreArgs $method.Out }})
 	return
 }
 {{ end }}
