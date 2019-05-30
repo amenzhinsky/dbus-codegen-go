@@ -87,11 +87,6 @@ import (
 	"github.com/godbus/dbus"
 )
 
-const (
-	methodPropertyGet = "org.freedesktop.DBus.Properties.Get"
-	methodPropertySet = "org.freedesktop.DBus.Properties.Set"
-)
-
 // Interface is a DBus interface implementation.
 type Interface interface {
 	iface() string
@@ -194,7 +189,7 @@ func (o *{{ ifaceType $iface }}) {{ methodType $method }}(ctx context.Context, {
 // {{ propGetType $prop }} gets {{ $iface.Name }}.{{ $prop.Name }} property.
 {{- template "annotations" $prop }}
 func (o *{{ ifaceType $iface }}) {{ propGetType $prop }}(ctx context.Context) ({{ propArgName $prop }} {{ $prop.Arg.Type }}, err error) {
-	err = o.object.CallWithContext(ctx, methodPropertyGet, 0, {{ ifaceNameConst $iface }}, "{{ $prop.Name }}").Store(&{{ propArgName $prop }})
+	err = o.object.CallWithContext(ctx, "org.freedesktop.DBus.Properties.Get", 0, {{ ifaceNameConst $iface }}, "{{ $prop.Name }}").Store(&{{ propArgName $prop }})
 	return
 }
 {{- end }}
@@ -202,7 +197,7 @@ func (o *{{ ifaceType $iface }}) {{ propGetType $prop }}(ctx context.Context) ({
 // {{ propSetType $prop }} sets {{ $iface.Name }}.{{ $prop.Name }} property.
 {{- template "annotations" $prop }}
 func (o *{{ ifaceType $iface }}) {{ propSetType $prop }}(ctx context.Context, {{ propArgName $prop }} {{ $prop.Arg.Type }}) error {
-	return o.object.CallWithContext(ctx, methodPropertySet, 0, {{ ifaceNameConst $iface }}, "{{ $prop.Name }}", {{ propArgName $prop }}).Store()
+	return o.object.CallWithContext(ctx, "org.freedesktop.DBus.Properties.Set", 0, {{ ifaceNameConst $iface }}, "{{ $prop.Name }}", {{ propArgName $prop }}).Store()
 }
 {{- end }}
 {{ end }}

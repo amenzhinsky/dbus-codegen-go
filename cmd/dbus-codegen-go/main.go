@@ -217,17 +217,11 @@ func introspectDest(
 	conn *dbus.Conn, dest string, path dbus.ObjectPath,
 	fn func(node *introspect.Node) error,
 ) error {
-	var s string
-	if err := conn.Object(dest, path).Call(
-		"org.freedesktop.DBus.Introspectable.Introspect", 0,
-	).Store(&s); err != nil {
+	node, err := introspect.Call(conn.Object(dest, path))
+	if err != nil {
 		return err
 	}
-	var node introspect.Node
-	if err := xml.Unmarshal([]byte(s), &node); err != nil {
-		return err
-	}
-	if err := fn(&node); err != nil {
+	if err := fn(node); err != nil {
 		return err
 	}
 	if path == "/" {
