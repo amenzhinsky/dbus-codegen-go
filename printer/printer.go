@@ -81,8 +81,10 @@ package {{ .PackageName }}
 
 import (
 	"context"
+{{if haveSignals .Interfaces}}
 	"errors"
 	"fmt"
+{{end}}
 
 	"github.com/godbus/dbus"
 )
@@ -104,6 +106,7 @@ func LookupInterface(object dbus.BusObject, iface string) Interface {
 	}
 }
 
+{{if haveSignals .Interfaces}}
 // Signal is a common interface for all signals.
 type Signal interface {
 	Name()      string
@@ -148,6 +151,7 @@ func LookupSignal(signal *dbus.Signal) (Signal, error) {
 func AddMatchRule(sig Signal) string {
 	return "type='signal',interface='" + sig.Interface() + "',member='" + sig.Name() + "'"
 }
+{{end}}
 
 // Interface name constants.
 const (
@@ -260,24 +264,25 @@ func Print(out io.Writer, ifaces []*token.Interface, opts ...PrintOption) error 
 
 	p.prepareIfaces(ifaces)
 	tmpl := template.Must(template.New("main").Funcs(template.FuncMap{
-		"ifaceNameConst":    p.ifaceNameConst,
-		"ifaceNewType":      p.ifaceNewType,
-		"ifaceType":         p.ifaceType,
-		"methodType":        p.methodType,
-		"propType":          p.propType,
-		"propGetType":       p.propGetType,
-		"propSetType":       p.propSetType,
-		"propArgName":       p.propArgName,
-		"propNeedsGet":      p.propNeedsGet,
-		"propNeedsSet":      p.propNeedsSet,
-		"signalType":        p.signalType,
-		"signalBodyType":    p.signalBodyType,
-		"argName":           p.argName,
-		"joinMethodInArgs":  p.joinMethodInArgs,
-		"joinMethodOutArgs": p.joinMethodOutArgs,
-		"joinArgNames":      p.joinArgNames,
-		"joinStoreArgs":     p.joinStoreArgs,
-		"joinSignalArgs":    p.joinSignalArgs,
+		"haveSignals":       p.tplHaveSignals,
+		"ifaceNameConst":    p.tplIfaceNameConst,
+		"ifaceNewType":      p.tplIfaceNewType,
+		"ifaceType":         p.tplIfaceType,
+		"methodType":        p.tplMethodType,
+		"propType":          p.tplPropType,
+		"propGetType":       p.tplPropGetType,
+		"propSetType":       p.tplPropSetType,
+		"propArgName":       p.tplPropArgName,
+		"propNeedsGet":      p.tplPropNeedsGet,
+		"propNeedsSet":      p.tplPropNeedsSet,
+		"signalType":        p.tplSignalType,
+		"signalBodyType":    p.tplSignalBodyType,
+		"argName":           p.tplArgName,
+		"joinMethodInArgs":  p.tplJoinMethodInArgs,
+		"joinMethodOutArgs": p.tplJoinMethodOutArgs,
+		"joinArgNames":      p.tplJoinArgNames,
+		"joinStoreArgs":     p.tplJoinStoreArgs,
+		"joinSignalArgs":    p.tplJoinSignalArgs,
 	}).Parse(srcTemplate))
 
 	var buf bytes.Buffer
@@ -330,7 +335,7 @@ func isKeyword(s string) bool {
 
 var ifaceRegexp = regexp.MustCompile(`[._][a-zA-Z0-9]`)
 
-func (p *printer) ifaceType(iface *token.Interface) string {
+func (p *printer) tplIfaceType(iface *token.Interface) string {
 	name := iface.Name
 	for _, prefix := range p.prefixes {
 		if prefix[len(prefix)-1] == '.' {
@@ -350,42 +355,51 @@ func (p *printer) ifaceType(iface *token.Interface) string {
 	})
 }
 
-func (p *printer) ifaceNewType(iface *token.Interface) string {
-	return "New" + p.ifaceType(iface)
+func (p *printer) tplHaveSignals(ifaces []*token.Interface) bool {
+	for _, iface := range ifaces {
+		if len(iface.Signals) > 0 {
+			return true
+		}
+	}
+	return false
 }
 
-func (p *printer) ifaceNameConst(iface *token.Interface) string {
-	return "Interface" + p.ifaceType(iface)
+func (p *printer) tplIfaceNewType(iface *token.Interface) string {
+	return "New" + p.tplIfaceType(iface)
 }
 
-func (p *printer) methodType(method *token.Method) string {
+func (p *printer) tplIfaceNameConst(iface *token.Interface) string {
+	return "Interface" + p.tplIfaceType(iface)
+}
+
+func (p *printer) tplMethodType(method *token.Method) string {
 	return strings.Title(method.Name)
 }
 
-func (p *printer) propType(prop *token.Property) string {
+func (p *printer) tplPropType(prop *token.Property) string {
 	return strings.Title(prop.Name)
 }
 
-func (p *printer) propGetType(prop *token.Property) string {
-	return "Get" + p.propType(prop)
+func (p *printer) tplPropGetType(prop *token.Property) string {
+	return "Get" + p.tplPropType(prop)
 }
 
-func (p *printer) propSetType(prop *token.Property) string {
-	return "Set" + p.propType(prop)
+func (p *printer) tplPropSetType(prop *token.Property) string {
+	return "Set" + p.tplPropType(prop)
 }
 
-func (p *printer) propNeedsSet(iface *token.Interface, prop *token.Property) bool {
+func (p *printer) tplPropNeedsSet(iface *token.Interface, prop *token.Property) bool {
 	if !prop.Write {
 		return false
 	}
-	return p.propNeedsAccessor(iface, p.propSetType(prop))
+	return p.propNeedsAccessor(iface, p.tplPropSetType(prop))
 }
 
-func (p *printer) propNeedsGet(iface *token.Interface, prop *token.Property) bool {
+func (p *printer) tplPropNeedsGet(iface *token.Interface, prop *token.Property) bool {
 	if !prop.Read {
 		return false
 	}
-	return p.propNeedsAccessor(iface, p.propGetType(prop))
+	return p.propNeedsAccessor(iface, p.tplPropGetType(prop))
 }
 
 func (p *printer) propNeedsAccessor(iface *token.Interface, name string) bool {
@@ -397,17 +411,17 @@ func (p *printer) propNeedsAccessor(iface *token.Interface, name string) bool {
 	return true
 }
 
-func (p *printer) signalType(iface *token.Interface, signal *token.Signal) string {
-	return p.ifaceType(iface) + "_" + strings.Title(signal.Name) + "Signal"
+func (p *printer) tplSignalType(iface *token.Interface, signal *token.Signal) string {
+	return p.tplIfaceType(iface) + "_" + strings.Title(signal.Name) + "Signal"
 }
 
-func (p *printer) signalBodyType(iface *token.Interface, signal *token.Signal) string {
-	return p.signalType(iface, signal) + "Body"
+func (p *printer) tplSignalBodyType(iface *token.Interface, signal *token.Signal) string {
+	return p.tplSignalType(iface, signal) + "Body"
 }
 
 var varRegexp = regexp.MustCompile("_+[a-zA-Z0-9]")
 
-func (p *printer) argName(arg *token.Arg, prefix string, i int, export bool) string {
+func (p *printer) tplArgName(arg *token.Arg, prefix string, i int, export bool) string {
 	name := arg.Name
 	if name == "" {
 		name = prefix + strconv.Itoa(i)
@@ -426,26 +440,26 @@ func (p *printer) argName(arg *token.Arg, prefix string, i int, export bool) str
 	return name
 }
 
-func (p *printer) propArgName(prop *token.Property) string {
-	return p.argName(prop.Arg, "v", 0, false)
+func (p *printer) tplPropArgName(prop *token.Property) string {
+	return p.tplArgName(prop.Arg, "v", 0, false)
 }
 
-func (p *printer) joinStoreArgs(args []*token.Arg) string {
+func (p *printer) tplJoinStoreArgs(args []*token.Arg) string {
 	var buf strings.Builder
 	for i := range args {
 		if i != 0 {
 			buf.WriteByte(',')
 		}
 		buf.WriteByte('&')
-		buf.WriteString(p.argName(args[i], "out", i, false))
+		buf.WriteString(p.tplArgName(args[i], "out", i, false))
 	}
 	return buf.String()
 }
 
-func (p *printer) joinArgs(args []*token.Arg, separator byte, suffix string, export bool) string {
+func (p *printer) tplJoinArgs(args []*token.Arg, separator byte, suffix string, export bool) string {
 	var buf strings.Builder
 	for i := range args {
-		buf.WriteString(p.argName(args[i], suffix, i, export))
+		buf.WriteString(p.tplArgName(args[i], suffix, i, export))
 		buf.WriteByte(' ')
 		buf.WriteString(args[i].Type)
 		buf.WriteByte(separator)
@@ -453,25 +467,25 @@ func (p *printer) joinArgs(args []*token.Arg, separator byte, suffix string, exp
 	return buf.String()
 }
 
-func (p *printer) joinSignalArgs(sig *token.Signal) string {
-	return p.joinArgs(sig.Args, ';', "v", true)
+func (p *printer) tplJoinSignalArgs(sig *token.Signal) string {
+	return p.tplJoinArgs(sig.Args, ';', "v", true)
 }
 
-func (p *printer) joinMethodInArgs(method *token.Method) string {
-	return p.joinArgs(method.In, ',', "in", false)
+func (p *printer) tplJoinMethodInArgs(method *token.Method) string {
+	return p.tplJoinArgs(method.In, ',', "in", false)
 }
 
-func (p *printer) joinMethodOutArgs(method *token.Method) string {
-	return p.joinArgs(method.Out, ',', "out", false)
+func (p *printer) tplJoinMethodOutArgs(method *token.Method) string {
+	return p.tplJoinArgs(method.Out, ',', "out", false)
 }
 
-func (p *printer) joinArgNames(args []*token.Arg) string {
+func (p *printer) tplJoinArgNames(args []*token.Arg) string {
 	var buf strings.Builder
 	for i := range args {
 		if i != 0 {
 			buf.WriteByte(',')
 		}
-		buf.WriteString(p.argName(args[i], "in", i, false))
+		buf.WriteString(p.tplArgName(args[i], "in", i, false))
 	}
 	return buf.String()
 }

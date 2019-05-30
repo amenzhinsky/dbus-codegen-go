@@ -30,7 +30,7 @@ func TestIfaceName(t *testing.T) {
 	for name, want := range map[string]string{
 		"camel_case_name": "Camel_Case_Name",
 	} {
-		if have := p.ifaceType(&token.Interface{
+		if have := p.tplIfaceType(&token.Interface{
 			Name: name,
 		}); have != want {
 			t.Errorf("ifaceType(%q) = %q, want %q", name, have, want)
