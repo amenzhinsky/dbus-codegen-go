@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -25,6 +26,7 @@ var (
 	packageFlag  string
 	gofmtFlag    bool
 	xmlFlag      bool
+	outputFlag   string
 )
 
 type stringsFlag []string
@@ -61,6 +63,7 @@ Flags:
 	flag.StringVar(&packageFlag, "package", "dbusgen", "generated package name")
 	flag.BoolVar(&gofmtFlag, "gofmt", true, "gofmt results")
 	flag.BoolVar(&xmlFlag, "xml", false, "combine the dest's introspections into a single document")
+	flag.StringVar(&outputFlag, "output", "", "path to output destination")
 	flag.Parse()
 
 	if err := run(); err != nil {
@@ -131,7 +134,16 @@ func run() error {
 			filtered = append(filtered, iface)
 		}
 	}
-	return printer.Print(os.Stdout, filtered,
+	var output io.Writer = os.Stdout
+	if outputFlag != "" {
+		var err error
+		output, err = os.OpenFile(outputFlag, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+		if err != nil {
+			return err
+		}
+	}
+
+	return printer.Print(output, filtered,
 		printer.WithPackageName(packageFlag),
 		printer.WithGofmt(gofmtFlag),
 		printer.WithPrefixes(prefixesFlag),
