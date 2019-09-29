@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/amenzhinsky/dbus-codegen-go/token"
-	"github.com/godbus/dbus/introspect"
+	"github.com/godbus/dbus/v5/introspect"
 )
 
 // Parse parses the given introspection XML into a list of interfaces.

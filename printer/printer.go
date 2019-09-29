@@ -86,7 +86,7 @@ import (
 	"fmt"
 {{end}}
 
-	"github.com/godbus/dbus"
+	"github.com/godbus/dbus/v5"
 )
 
 {{if haveSignals .Interfaces}}

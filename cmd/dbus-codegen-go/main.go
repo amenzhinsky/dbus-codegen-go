@@ -12,8 +12,8 @@ import (
 	"github.com/amenzhinsky/dbus-codegen-go/parser"
 	"github.com/amenzhinsky/dbus-codegen-go/printer"
 	"github.com/amenzhinsky/dbus-codegen-go/token"
-	"github.com/godbus/dbus"
-	"github.com/godbus/dbus/introspect"
+	"github.com/godbus/dbus/v5"
+	"github.com/godbus/dbus/v5/introspect"
 )
 
 var (
