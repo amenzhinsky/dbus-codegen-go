@@ -128,9 +128,7 @@ func run() error {
 	}
 	filtered := make([]*token.Interface, 0, len(ifaces))
 	for _, iface := range ifaces {
-		if len(onlyFlag) == 0 && len(exceptFlag) == 0 ||
-			len(onlyFlag) != 0 && includes(onlyFlag, iface.Name) ||
-			len(exceptFlag) != 0 && !includes(exceptFlag, iface.Name) {
+		if isNeeded(iface.Name) {
 			filtered = append(filtered, iface)
 		}
 	}
@@ -186,7 +184,7 @@ func generateXML(conn *dbus.Conn, dests []string) ([]byte, error) {
 						break
 					}
 				}
-				if !found {
+				if !found && isNeeded(ifn.Name) {
 					ifaces = append(ifaces, ifn)
 				}
 			}
@@ -214,6 +212,12 @@ func merge(curr, next []*token.Interface) []*token.Interface {
 		}
 	}
 	return curr
+}
+
+func isNeeded(iface string) bool {
+	return len(onlyFlag) == 0 && len(exceptFlag) == 0 ||
+		len(onlyFlag) != 0 && includes(onlyFlag, iface) ||
+		len(exceptFlag) != 0 && !includes(exceptFlag, iface)
 }
 
 func includes(ss []string, s string) bool {
