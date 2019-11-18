@@ -7,7 +7,7 @@ import (
 	"github.com/amenzhinsky/dbus-codegen-go/token"
 )
 
-func TestPrint(t *testing.T) {
+func TestPrintClient(t *testing.T) {
 	t.Parallel()
 
 	var buf bytes.Buffer
@@ -26,7 +26,7 @@ func TestPrint(t *testing.T) {
 }
 
 func TestIfaceName(t *testing.T) {
-	p := &printer{}
+	p := &context{}
 	for name, want := range map[string]string{
 		"camel_case_name": "Camel_Case_Name",
 	} {

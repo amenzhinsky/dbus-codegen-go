@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 
@@ -16,15 +15,16 @@ func main() {
 }
 
 func run() error {
-	conn, err := dbus.SystemBus()
+	conn, err := dbus.SessionBus()
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
 
-	o := NewOrg_Freedesktop_DBus(
-		conn.Object("org.freedesktop.DBus", "/org/freedesktop/DBus"),
-	)
-	_, err = o.GetId(context.Background())
-	return err
+	return Emit(conn, &Org_Freedesktop_DBus_Properties_PropertiesChangedSignal{
+		Path: "/org/test",
+		Body: &Org_Freedesktop_DBus_Properties_PropertiesChangedSignalBody {
+			InterfaceName: "org.freedesktop.test",
+		},
+	})
 }

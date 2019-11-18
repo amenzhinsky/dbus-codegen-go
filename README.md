@@ -172,10 +172,10 @@ The generated output by `printer` package cannot be parsed by gofmt and that is 
 ## TODO
 
 - name conflicts resolver
-- server side code generation
 - add coding examples
 - sophisticated tests
 - more printer options, like using Ugly_Case and CamelCase in interface names
+- handle no-reply calls
 
 ## Contributing
 

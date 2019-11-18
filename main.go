@@ -24,6 +24,7 @@ var (
 	prefixesFlag []string
 	systemFlag   bool
 	packageFlag  string
+	serverFlag   bool
 	gofmtFlag    bool
 	xmlFlag      bool
 	outputFlag   string
@@ -61,6 +62,7 @@ Flags:
 	flag.Var((*stringsFlag)(&prefixesFlag), "prefix", "prefix to strip from interface names")
 	flag.BoolVar(&systemFlag, "system", false, "connect to the system bus")
 	flag.StringVar(&packageFlag, "package", "dbusgen", "generated package name")
+	flag.BoolVar(&serverFlag, "server", false, "generate server interfaces instead of client code")
 	flag.BoolVar(&gofmtFlag, "gofmt", true, "gofmt results")
 	flag.BoolVar(&xmlFlag, "xml", false, "combine the dest's introspections into a single document")
 	flag.StringVar(&outputFlag, "output", "", "path to output destination")
