@@ -1,6 +1,7 @@
 # dbus-codegen-go
 
-Takes the [D-Bus Introspection Data Format](https://dbus.freedesktop.org/doc/dbus-specification.html#introspection-format) and generates Go code.
+
+[D-Bus Introspection Data Format](https://dbus.freedesktop.org/doc/dbus-specification.html#introspection-format) Go code generator.
 
 The project depends only on [github.com/godbus/dbus](https://github.com/godbus/dbus) module and cannot be used separately because it operates its data types.
 
@@ -8,7 +9,7 @@ API may change until 1.0.0, so please vendor the source code if you want to use 
 
 ## Overview
 
-XML like this:
+The tool generates two types of code-bases: server and client, so if we take use the following XML:
 
 ```xml
 <node>
@@ -26,30 +27,119 @@ XML like this:
 </node>
 ```
 
-The tool will generate the following data structures:
+### Client
 
-1. Structure `My_Awesome_Interface`, that can be created with `NewMy_Awesome_Interface(object)` or via `InterfaceLookup(object, "my.awesome.interface").(*My_Awesome_Interface)` in case you have more than one interface.
-1. `IToA` method attached to the structure: `(*My_Awesome_Interface) IToA(context.Context, int64) (string, error)`.
-1. `Powered` property getter and setter: `(*My_Awesome_Interface) GetPowered(context.Context) (bool, error)` and `(*My_Awesome_Interface) SetPowered(context.Context, bool) error`.
-1. `My_Awesome_Interface_SomethingHappenedSignal` for typed access to signal body attributes, `LookupSignal(*dbus.Signal) (Signal, error)` and `AddMatchRule(*dbus.Signal) string` helper functions, see usage in the [examples](#examples) section.
-    
-1. Annotations added to interfaces, methods, properties and signals as comments.
+The program generates statically compiled bindings that are used to create objects that wrap around `dbus.BusObject`:
+
+```
+obj := NewMy_Awesome_Interface(conn.Object("my.awesome.service", "/my/awesome/service"))
+```
+
+Now we can call its methods:
+
+```
+s, err := obj.IToA(context.Background(), 666)
+if err != nil {
+    return err
+}
+fmt.Printf("itoa(%d) = %s", 666, s)
+```
+
+Retrieve or set property values:
+
+```
+powered, err := obj.GetPowered(context.Background())
+if err != nil {
+    return err
+}
+fmt.Printf("powered = %t", powered)
+
+if err := o.SetPowered(context.Background(), true); err != nil {
+    return err
+}
+```
+
+Handling signals requires type assetions:
+
+```
+sigt := (*My_Awesome_Interface_SomethingHappenedSignal)(nil)
+if err := AddMatchSignal(conn, sigt); err != nil {
+    return err
+}
+defer RemoveMatchSignal(conn, sigt)
+
+sigc := make(chan *dbus.Signal, 1)
+conn.Signal(sigc)
+for sig := range sigc {
+    s, err := LookupSignal(sig)
+    if err != nil {
+        if err == ErrUnknownSignal {
+            continue
+        }
+        return err
+    }
+
+    switch typed := s.(type) {
+    case *My_Awesome_Interface_SomethingHappenedSignal:
+        fmt.Printf("%s happened at %s", typed.Body.What, typed.Body.ObjectPath)
+    }
+}
+```
+
+### Server
+
+Now we can implement the server interface, all interfaces are postfixed with `er`, in this example it's `My_Awesome_Interfaceer`.
+
+It's recommended to embed the corresponding generated unimplemented structure for forward compatible implementations:
+
+```
+type server struct {
+	*UnimplementedMy_Awesome_Interface
+}
+
+func (s *server) IToA(in int64) (string, *dbus.Error) {
+	return strconv.Itoa(int(in)), nil
+}
+```
+
+And now we can export the implementation:
+
+```
+if err := ExportMy_Awesome_Interface(conn, "/my/awesome/service", &srv{}); err != nil {
+	return err
+}
+```
+
+Emitting signals is done reusing the same structures generated for the client side:
+
+```
+if err := Emit(conn, &My_Awesome_Interface_SomethingHappenedSignal{
+    Path: "/org/my/iface",
+    Body: &My_Awesome_Interface_SomethingHappenedSignalBody{
+        ObjectPath: "/org/obj",
+        What:       "something terrible",
+    },
+}); err != nil {
+	return err
+}
+```
 
 ## Installation
 
 You can install it with `go get`:
 
 ```bash
-go get -u github.com/amenzhinsky/dbus-codegen-go/cmd/dbus-codegen-go
+GO111MODULE=on go get -u github.com/amenzhinsky/dbus-codegen-go
 ```
 
 Or clone the repo and build it manually:
 
 ```bash
-git clone https://github.com/amenzhinsky/dbus-codegen-go.git
-cd dbus-codegen-go
-go build
+git clone https://github.com/amenzhinsky/dbus-codegen-go.git .
+go install
 ```
+
+Make sure `$(go env GOPATH)/bin` is in your `$PATH`.
 
 ## Usage
 
@@ -91,68 +181,6 @@ dbus-codegen-go \
 	-prefix=org.freedesktop.systemd1
 ```
 
-## Examples
-
-The following example subscribes to all `PropertyChanged` signals from `org.freedesktop.systemd1` destination.
-
-The generated code is generated with:
-
-```bash
-dbus-codegen-go \
-	-package=main \
-	-dest=org.freedesktop.DBus \
-	-dest=org.freedesktop.systemd1 
-```
-
-```go
-package main
-
-import (
-	"fmt"
-	"os"
-
-	"github.com/godbus/dbus/v5"
-)
-
-func main() {
-	if err := run(); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
-		os.Exit(1)
-	}
-}
-
-func run() error {
-	conn, err := dbus.SystemBus()
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	sigc := make(chan *dbus.Signal, 1)
-	conn.Signal(sigc)
-	defer conn.RemoveSignal(sigc)
-
-	bus := NewOrg_Freedesktop_DBus(conn.BusObject())
-	if err := bus.AddMatch(
-		AddMatchRule((*Org_Freedesktop_DBus_Properties_PropertiesChangedSignal)(nil)) +
-			",sender='org.freedesktop.systemd1'",
-	); err != nil {
-		return err
-	}
-	for s := range sigc {
-		sig, err := LookupSignal(s)
-		if err != nil {
-			return err
-		}
-		switch v := sig.(type) {
-		case *Org_Freedesktop_DBus_Properties_PropertiesChangedSignal:
-			fmt.Printf("%s %s: %v\n", v.Path(), v.Body.Interface, v.Body.ChangedProperties)
-		}
-	}
-	return nil
-}
-```
-
 ## Testing
 
 To test the package simply run:
@@ -176,6 +204,7 @@ The generated output by `printer` package cannot be parsed by gofmt and that is 
 - sophisticated tests
 - more printer options, like using Ugly_Case and CamelCase in interface names
 - handle no-reply calls
+- `-server-only` and `-client-only` options
 
 ## Contributing
 

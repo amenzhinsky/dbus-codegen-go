@@ -136,8 +136,8 @@ type {{ serverType $iface }} interface {
 	{{ end }}
 }
 
-// Export{{ serverType $iface }} exports the given object that implements {{ $iface.Name }} on the bus.
-func Export{{ serverType $iface }}(conn *dbus.Conn, path dbus.ObjectPath, v {{ serverType $iface }}) error {
+// Export{{ ifaceType $iface }} exports the given object that implements {{ $iface.Name }} on the bus.
+func Export{{ ifaceType $iface }}(conn *dbus.Conn, path dbus.ObjectPath, v {{ serverType $iface }}) error {
 	return conn.ExportSubtreeMethodTable(map[string]interface{}{
 		{{ range $method := $iface.Methods -}}
 		"{{ $method.Name }}": v.{{ methodType $method }},
@@ -145,8 +145,8 @@ func Export{{ serverType $iface }}(conn *dbus.Conn, path dbus.ObjectPath, v {{ s
 	}, path, {{ ifaceNameConst $iface }})
 }
 
-// Unexport{{ serverType $iface }} unexports {{ $iface.Name }} interface on the named path.
-func Unexport{{ serverType $iface }}(conn *dbus.Conn, path dbus.ObjectPath) error {
+// Unexport{{ ifaceType $iface }} unexports {{ $iface.Name }} interface on the named path.
+func Unexport{{ ifaceType $iface }}(conn *dbus.Conn, path dbus.ObjectPath) error {
 	return conn.Export(nil, path, {{ ifaceNameConst $iface }})
 }
 
