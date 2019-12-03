@@ -31,13 +31,13 @@ The tool generates two types of code-bases: server and client, so if we take use
 
 The program generates statically compiled bindings that are used to create objects that wrap around `dbus.BusObject`:
 
-```
+```go
 obj := NewMy_Awesome_Interface(conn.Object("my.awesome.service", "/my/awesome/service"))
 ```
 
 Now we can call its methods:
 
-```
+```go
 s, err := obj.IToA(context.Background(), 666)
 if err != nil {
     return err
@@ -47,7 +47,7 @@ fmt.Printf("itoa(%d) = %s", 666, s)
 
 Retrieve or set property values:
 
-```
+```go
 powered, err := obj.GetPowered(context.Background())
 if err != nil {
     return err
@@ -59,9 +59,9 @@ if err := o.SetPowered(context.Background(), true); err != nil {
 }
 ```
 
-Handling signals requires type assetions:
+Handling signals requires type assertions:
 
-```
+```go
 sigt := (*My_Awesome_Interface_SomethingHappenedSignal)(nil)
 if err := AddMatchSignal(conn, sigt); err != nil {
     return err
