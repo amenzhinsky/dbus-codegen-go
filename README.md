@@ -92,7 +92,7 @@ Now we can implement the server interface, all interfaces are postfixed with `er
 
 It's recommended to embed the corresponding generated unimplemented structure for forward compatible implementations:
 
-```
+```go
 type server struct {
 	*UnimplementedMy_Awesome_Interface
 }
@@ -104,7 +104,7 @@ func (s *server) IToA(in int64) (string, *dbus.Error) {
 
 And now we can export the implementation:
 
-```
+```go
 if err := ExportMy_Awesome_Interface(conn, "/my/awesome/service", &srv{}); err != nil {
 	return err
 }
@@ -112,7 +112,7 @@ if err := ExportMy_Awesome_Interface(conn, "/my/awesome/service", &srv{}); err !
 
 Emitting signals is done reusing the same structures generated for the client side:
 
-```
+```go
 if err := Emit(conn, &My_Awesome_Interface_SomethingHappenedSignal{
     Path: "/org/my/iface",
     Body: &My_Awesome_Interface_SomethingHappenedSignalBody{
