@@ -197,7 +197,7 @@ func (o *{{ ifaceType $iface }}) {{ propGetType $prop }}(ctx context.Context) ({
 // {{ propSetType $prop }} sets {{ $iface.Name }}.{{ $prop.Name }} property.
 {{- template "annotations" $prop }}
 func (o *{{ ifaceType $iface }}) {{ propSetType $prop }}(ctx context.Context, {{ propArgName $prop }} {{ $prop.Arg.Type }}) error {
-	return o.object.CallWithContext(ctx, "org.freedesktop.DBus.Properties.Set", 0, {{ ifaceNameConst $iface }}, "{{ $prop.Name }}", {{ propArgName $prop }}).Store()
+	return o.object.CallWithContext(ctx, "org.freedesktop.DBus.Properties.Set", 0, {{ ifaceNameConst $iface }}, "{{ $prop.Name }}", dbus.MakeVariant({{ propArgName $prop }})).Store()
 }
 {{- end }}
 {{ end }}
