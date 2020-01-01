@@ -1,11 +1,10 @@
 # dbus-codegen-go
 
-
 [D-Bus Introspection Data Format](https://dbus.freedesktop.org/doc/dbus-specification.html#introspection-format) Go code generator.
 
 The project depends only on [github.com/godbus/dbus](https://github.com/godbus/dbus) module and cannot be used separately because it operates its data types.
 
-API may change until 1.0.0, so please vendor the source code if you want to use this tool.
+CLI and generated code API is a subject to change until v1.0.0.
 
 ## Overview
 
