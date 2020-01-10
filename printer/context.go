@@ -58,6 +58,8 @@ type context struct {
 	PackageName string
 	Imports     []string
 	Interfaces  []*token.Interface
+	ServerOnly  bool
+	ClientOnly  bool
 
 	tpl      *template.Template
 	gofmt    bool

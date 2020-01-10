@@ -203,7 +203,6 @@ The generated output by `printer` package cannot be parsed by gofmt and that is 
 - sophisticated tests
 - more printer options, like using Ugly_Case and CamelCase in interface names
 - handle no-reply calls
-- `-server-only` and `-client-only` options
 
 ## Contributing
 

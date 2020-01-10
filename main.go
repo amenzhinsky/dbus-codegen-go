@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/amenzhinsky/dbus-codegen-go/parser"
@@ -18,25 +19,26 @@ import (
 )
 
 var (
-	destFlag     []string
-	onlyFlag     []string
-	exceptFlag   []string
-	prefixesFlag []string
-	systemFlag   bool
-	packageFlag  string
-	serverFlag   bool
-	gofmtFlag    bool
-	xmlFlag      bool
-	outputFlag   string
+	destFlag       []string
+	onlyFlag       []string
+	exceptFlag     []string
+	prefixesFlag   []string
+	systemFlag     bool
+	packageFlag    string
+	gofmtFlag      bool
+	xmlFlag        bool
+	outputFlag     string
+	serverOnlyFlag bool
+	clientOnlyFlag bool
 )
 
-type stringsFlag []string
+type stringsVar []string
 
-func (ss *stringsFlag) String() string {
+func (ss *stringsVar) String() string {
 	return "[" + strings.Join(*ss, ", ") + "]"
 }
 
-func (ss *stringsFlag) Set(arg string) error {
+func (ss *stringsVar) Set(arg string) error {
 	for _, s := range strings.Split(arg, ",") {
 		if s == "" {
 			continue
@@ -48,24 +50,25 @@ func (ss *stringsFlag) Set(arg string) error {
 
 func main() {
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, `Usage: %s [FLAG...] [PATH...]
+		fmt.Fprintf(os.Stderr, `Usage: %s [option...] [PATH...]
 
-Takes D-Bus Introspection Data Format and generates go code for it.
+D-Bus Introspection Data Format code generator for Golang.
 
-Flags:
-`, os.Args[0])
+Options:
+`, filepath.Base(os.Args[0]))
 		flag.PrintDefaults()
 	}
-	flag.Var((*stringsFlag)(&destFlag), "dest", "destination name(s) to introspect")
-	flag.Var((*stringsFlag)(&onlyFlag), "only", "generate code only for the named interfaces")
-	flag.Var((*stringsFlag)(&exceptFlag), "except", "skip the named interfaces")
-	flag.Var((*stringsFlag)(&prefixesFlag), "prefix", "prefix to strip from interface names")
+	flag.Var((*stringsVar)(&destFlag), "dest", "destination name(s) to introspect")
+	flag.Var((*stringsVar)(&onlyFlag), "only", "generate code only for the named interfaces")
+	flag.Var((*stringsVar)(&exceptFlag), "except", "skip the named interfaces")
+	flag.Var((*stringsVar)(&prefixesFlag), "prefix", "prefix to strip from interface names")
 	flag.BoolVar(&systemFlag, "system", false, "connect to the system bus")
 	flag.StringVar(&packageFlag, "package", "dbusgen", "generated package name")
-	flag.BoolVar(&serverFlag, "server", false, "generate server interfaces instead of client code")
 	flag.BoolVar(&gofmtFlag, "gofmt", true, "gofmt results")
 	flag.BoolVar(&xmlFlag, "xml", false, "combine the dest's introspections into a single document")
 	flag.StringVar(&outputFlag, "output", "", "path to output destination")
+	flag.BoolVar(&serverOnlyFlag, "server-only", false, "generate only server-side code")
+	flag.BoolVar(&clientOnlyFlag, "client-only", false, "generate only client-side code")
 	flag.Parse()
 
 	if err := run(); err != nil {
@@ -75,14 +78,21 @@ Flags:
 }
 
 func run() error {
-	var ifaces []*token.Interface
 	if len(destFlag) == 0 && xmlFlag {
-		return errors.New("flag -xml cannot be used without -dest flag")
+		return errors.New("cannot combine -xml and -dest")
 	}
+	if serverOnlyFlag && clientOnlyFlag {
+		return errors.New("cannot combine -server-only and -client-only")
+	}
+	if len(onlyFlag) != 0 && len(exceptFlag) != 0 {
+		return errors.New("cannot combine -only and -except")
+	}
+
+	var ifaces []*token.Interface
 	switch {
 	case len(destFlag) != 0:
 		if flag.NArg() > 0 {
-			return errors.New("cannot combine arguments and -dest flag")
+			return errors.New("cannot combine -dest and file paths")
 		}
 		conn, err := connect(systemFlag)
 		if err != nil {
@@ -125,9 +135,6 @@ func run() error {
 		}
 	}
 
-	if len(onlyFlag) != 0 && len(exceptFlag) != 0 {
-		return errors.New("cannot combine -only and -except flags")
-	}
 	filtered := make([]*token.Interface, 0, len(ifaces))
 	for _, iface := range ifaces {
 		if isNeeded(iface.Name) {
@@ -147,6 +154,8 @@ func run() error {
 		printer.WithPackageName(packageFlag),
 		printer.WithGofmt(gofmtFlag),
 		printer.WithPrefixes(prefixesFlag),
+		printer.WithServerOnly(serverOnlyFlag),
+		printer.WithClientOnly(clientOnlyFlag),
 	)
 }
 
