@@ -4,7 +4,6 @@ import (
 	"errors"
 	gotoken "go/token"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"text/template"
@@ -74,25 +73,6 @@ func (ctx *context) addImport(pkg string) {
 		}
 	}
 	ctx.Imports = append(ctx.Imports, pkg)
-}
-
-// prepare sorts all entities alphabetically to provide reproducible results
-func (ctx *context) prepare() {
-	sort.Strings(ctx.Imports)
-	sort.Slice(ctx.Interfaces, func(i, j int) bool {
-		return ctx.Interfaces[i].Name < ctx.Interfaces[j].Name
-	})
-	for _, iface := range ctx.Interfaces {
-		sort.Slice(iface.Methods, func(i, j int) bool {
-			return iface.Methods[i].Name < iface.Methods[j].Name
-		})
-		sort.Slice(iface.Properties, func(i, j int) bool {
-			return iface.Properties[i].Name < iface.Properties[j].Name
-		})
-		sort.Slice(iface.Signals, func(i, j int) bool {
-			return iface.Signals[i].Name < iface.Signals[j].Name
-		})
-	}
 }
 
 var ifaceRegexp = regexp.MustCompile(`[._][a-zA-Z0-9]`)
