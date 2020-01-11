@@ -181,6 +181,16 @@ dbus-codegen-go \
 	-prefix=org.freedesktop.systemd1
 ```
 
+### Annotations
+
+* `org.freedesktop.DBus.Method.NoReply` = `true`
+   
+   `dbus.FlagNoReplyExpected` flag is used for method calling.
+
+* `org.freedesktop.DBus.Deprecated` = `true`
+   
+   `// Deprecated` comment is added for better IDE integration.
+
 ## Testing
 
 To test the package simply run:
