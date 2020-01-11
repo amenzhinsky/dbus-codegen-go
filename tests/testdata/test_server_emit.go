@@ -23,7 +23,7 @@ func run() error {
 
 	return Emit(conn, &Org_Freedesktop_DBus_Properties_PropertiesChangedSignal{
 		Path: "/org/test",
-		Body: &Org_Freedesktop_DBus_Properties_PropertiesChangedSignalBody {
+		Body: &Org_Freedesktop_DBus_Properties_PropertiesChangedSignalBody{
 			InterfaceName: "org.freedesktop.test",
 		},
 	})

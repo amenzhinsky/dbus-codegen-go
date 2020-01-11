@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"testing"
 )
 
@@ -31,12 +30,13 @@ var xmlFiles = []string{
 	"testdata/org.gnome.DisplayManager.xml",
 }
 
-func TestHashSum(t *testing.T) {
+func TestReproducibility(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
 	for _, file := range xmlFiles {
 		t.Run(file, func(t *testing.T) {
+			t.Parallel()
 			b1, err := generate(file)
 			if err != nil {
 				t.Fatal(err)
@@ -58,48 +58,57 @@ func TestItCompiles(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
+
+	src := []byte(`package main
+func main() {}`)
+
 	for _, file := range xmlFiles {
 		t.Run(file, func(t *testing.T) {
-			checkCompile(t, "testdata/test_it_compiles.gof", file)
+			checkCompile(t, src, file)
 			t.Run("camelize", func(t *testing.T) {
-				checkCompile(t, "testdata/test_it_compiles.gof", "-camelize", file)
+				checkCompile(t, src, "-camelize", file)
 			})
 			t.Run("server-only", func(t *testing.T) {
-				checkCompile(t, "testdata/test_it_compiles.gof", "-server-only", file)
+				checkCompile(t, src, "-server-only", file)
 			})
 			t.Run("client-only", func(t *testing.T) {
-				checkCompile(t, "testdata/test_it_compiles.gof", "-client-only", file)
+				checkCompile(t, src, "-client-only", file)
 			})
 		})
 	}
 }
 
-func TestCompile(t *testing.T) {
+func TestScenario(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
 	for _, tc := range [][]string{
-		{"testdata/test_signal.gof", "testdata/org.freedesktop.DBus.xml"},
-		{"testdata/test_single_method.gof", "testdata/org.freedesktop.DBus.xml"},
-		{"testdata/test_properties.gof", "testdata/org.freedesktop.DBus.xml"},
-		{"testdata/test_server_export.gof", "testdata/org.freedesktop.DBus.xml"},
-		{"testdata/test_server_emit.gof", "testdata/org.freedesktop.DBus.xml"},
+		{"testdata/test_signal.go", "testdata/org.freedesktop.DBus.xml"},
+		{"testdata/test_single_method.go", "testdata/org.freedesktop.DBus.xml"},
+		{"testdata/test_properties.go", "testdata/org.freedesktop.DBus.xml"},
+		{"testdata/test_server_export.go", "testdata/org.freedesktop.DBus.xml"},
+		{"testdata/test_server_emit.go", "testdata/org.freedesktop.DBus.xml"},
 	} {
 		goFile, xmlFile := tc[0], tc[1]
 		t.Run(goFile, func(t *testing.T) {
-			checkCompile(t, goFile, xmlFile)
+			b, err := ioutil.ReadFile(goFile)
+			if err != nil {
+				t.Fatal(err)
+			}
+			checkCompile(t, b, xmlFile)
 		})
 	}
 }
 
-func checkCompile(t *testing.T, goFile string, args ...string) {
+func checkCompile(t *testing.T, src []byte, args ...string) {
 	t.Helper()
+	t.Parallel()
 	b, err := generate(args...)
 	if err != nil {
 		t.Fatalf("generate(%v) error: %s", args, err)
 	}
-	if err := compile(b, goFile); err != nil {
-		t.Fatalf("compile(%q, %v) error: %s", goFile, args, err)
+	if err := compile(b, src); err != nil {
+		t.Fatalf("compile(%q, %v) error: %s", src, args, err)
 	}
 }
 
@@ -111,21 +120,17 @@ func generate(args ...string) ([]byte, error) {
 	return cmd.Output()
 }
 
-func compile(b []byte, goFile string) error {
+func compile(gen, src []byte) error {
 	temp, err := ioutil.TempDir("", "")
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(temp)
 
-	if err = ioutil.WriteFile(temp+"/gen.go", b, 0644); err != nil {
+	if err = ioutil.WriteFile(temp+"/gen.go", gen, 0644); err != nil {
 		return err
 	}
-	path, err := filepath.Abs(goFile)
-	if err != nil {
-		return err
-	}
-	if err = os.Symlink(path, temp+"/main.go"); err != nil {
+	if err = ioutil.WriteFile(temp+"/main.go", src, 0644); err != nil {
 		return err
 	}
 	if out, err := exec.Command(
