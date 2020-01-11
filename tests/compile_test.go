@@ -34,21 +34,22 @@ func TestReproducibility(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
-	for _, file := range xmlFiles {
-		t.Run(file, func(t *testing.T) {
+	for _, f := range xmlFiles {
+		f := f
+		t.Run(f, func(t *testing.T) {
 			t.Parallel()
-			b1, err := generate(file)
+			b1, err := generate(f)
 			if err != nil {
 				t.Fatal(err)
 			}
-			b2, err := generate(file)
+			b2, err := generate(f)
 			if err != nil {
 				t.Fatal(err)
 			}
 			h1 := sha256.Sum256(b1)
 			h2 := sha256.Sum256(b2)
 			if h1 != h2 {
-				t.Errorf("hashsums for %v are different over multiple runs", file)
+				t.Errorf("hashsums for %v are different over multiple runs", f)
 			}
 		})
 	}
@@ -62,17 +63,18 @@ func TestItCompiles(t *testing.T) {
 	src := []byte(`package main
 func main() {}`)
 
-	for _, file := range xmlFiles {
-		t.Run(file, func(t *testing.T) {
-			checkCompile(t, src, file)
+	for _, f := range xmlFiles {
+		f := f
+		t.Run(f, func(t *testing.T) {
+			checkCompile(t, src, f)
 			t.Run("camelize", func(t *testing.T) {
-				checkCompile(t, src, "-camelize", file)
+				checkCompile(t, src, "-camelize", f)
 			})
 			t.Run("server-only", func(t *testing.T) {
-				checkCompile(t, src, "-server-only", file)
+				checkCompile(t, src, "-server-only", f)
 			})
 			t.Run("client-only", func(t *testing.T) {
-				checkCompile(t, src, "-client-only", file)
+				checkCompile(t, src, "-client-only", f)
 			})
 		})
 	}
