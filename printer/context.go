@@ -171,7 +171,11 @@ func (ctx *context) propNeedsAccessor(iface *token.Interface, name string) bool 
 }
 
 func (ctx *context) tplSignalType(iface *token.Interface, signal *token.Signal) string {
-	return ctx.tplIfaceType(iface) + "_" + strings.Title(signal.Name) + "Signal"
+	join := "_"
+	if ctx.camelize {
+		join = ""
+	}
+	return ctx.tplIfaceType(iface) + join + strings.Title(signal.Name) + "Signal"
 }
 
 func (ctx *context) tplSignalBodyType(iface *token.Interface, signal *token.Signal) string {

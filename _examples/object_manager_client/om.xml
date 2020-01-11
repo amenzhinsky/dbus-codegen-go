@@ -1,0 +1,15 @@
+<node>
+	<interface name="org.freedesktop.DBus.ObjectManager">
+		<method name="GetManagedObjects">
+			<arg name="objects" type="a{oa{sa{sv}}}" direction="out"></arg>
+		</method>
+		<signal name="InterfacesAdded">
+			<arg name="object" type="o"></arg>
+			<arg name="interfaces" type="a{sa{sv}}"></arg>
+		</signal>
+		<signal name="InterfacesRemoved">
+			<arg name="object" type="o"></arg>
+			<arg name="interfaces" type="as"></arg>
+		</signal>
+	</interface>
+</node>
