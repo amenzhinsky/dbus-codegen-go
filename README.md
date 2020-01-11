@@ -201,7 +201,6 @@ The generated output by `printer` package cannot be parsed by gofmt and that is 
 
 - name conflicts resolver
 - sophisticated tests
-- handle no-reply calls
 
 ## Contributing
 

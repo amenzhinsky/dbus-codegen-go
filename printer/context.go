@@ -32,27 +32,29 @@ func newContext(ifaces []*token.Interface, opts ...PrintOption) (*context, error
 	}
 
 	ctx.tpl = template.New("main").Funcs(template.FuncMap{
-		"haveSignals":       ctx.tplHaveSignals,
-		"ifaceNameConst":    ctx.tplIfaceNameConst,
-		"ifaceType":         ctx.tplIfaceType,
-		"unimplementedType": ctx.tplUnimplementedType,
-		"serverType":        ctx.tplServerType,
-		"methodType":        ctx.tplMethodType,
-		"propType":          ctx.tplPropType,
-		"propGetType":       ctx.tplPropGetType,
-		"propSetType":       ctx.tplPropSetType,
-		"propArgName":       ctx.tplPropArgName,
-		"propNeedsGet":      ctx.tplPropNeedsGet,
-		"propNeedsSet":      ctx.tplPropNeedsSet,
-		"signalType":        ctx.tplSignalType,
-		"signalBodyType":    ctx.tplSignalBodyType,
-		"argName":           ctx.tplArgName,
-		"joinMethodInArgs":  ctx.tplJoinMethodInArgs,
-		"joinMethodOutArgs": ctx.tplJoinMethodOutArgs,
-		"joinArgNames":      ctx.tplJoinArgNames,
-		"joinStoreArgs":     ctx.tplJoinStoreArgs,
-		"joinSignalValues":  ctx.tplJoinSignalValues,
-		"joinSignalArgs":    ctx.tplJoinSignalArgs,
+		"haveSignals":        ctx.tplHaveSignals,
+		"ifaceNameConst":     ctx.tplIfaceNameConst,
+		"ifaceType":          ctx.tplIfaceType,
+		"unimplementedType":  ctx.tplUnimplementedType,
+		"serverType":         ctx.tplServerType,
+		"methodType":         ctx.tplMethodType,
+		"methodFlags":        ctx.tplMethodFlags,
+		"methodIsDeprecated": ctx.tplMethodIsDeprecated,
+		"propType":           ctx.tplPropType,
+		"propGetType":        ctx.tplPropGetType,
+		"propSetType":        ctx.tplPropSetType,
+		"propArgName":        ctx.tplPropArgName,
+		"propNeedsGet":       ctx.tplPropNeedsGet,
+		"propNeedsSet":       ctx.tplPropNeedsSet,
+		"signalType":         ctx.tplSignalType,
+		"signalBodyType":     ctx.tplSignalBodyType,
+		"argName":            ctx.tplArgName,
+		"joinMethodInArgs":   ctx.tplJoinMethodInArgs,
+		"joinMethodOutArgs":  ctx.tplJoinMethodOutArgs,
+		"joinArgNames":       ctx.tplJoinArgNames,
+		"joinStoreArgs":      ctx.tplJoinStoreArgs,
+		"joinSignalValues":   ctx.tplJoinSignalValues,
+		"joinSignalArgs":     ctx.tplJoinSignalArgs,
 	})
 	return ctx, nil
 }
@@ -133,6 +135,26 @@ func (ctx *context) tplIfaceNameConst(iface *token.Interface) string {
 
 func (ctx *context) tplMethodType(method *token.Method) string {
 	return strings.Title(method.Name)
+}
+
+func (ctx *context) tplMethodFlags(method *token.Method) string {
+	for _, annotation := range method.Annotations {
+		if annotation.Name == "org.freedesktop.DBus.Method.NoReply" &&
+			annotation.Value == "true" {
+			return "dbus.FlagNoReplyExpected"
+		}
+	}
+	return "0"
+}
+
+func (ctx *context) tplMethodIsDeprecated(method *token.Method) bool {
+	for _, annotation := range method.Annotations {
+		if annotation.Name == "org.freedesktop.DBus.Deprecated" &&
+			annotation.Value == "true" {
+			return true
+		}
+	}
+	return false
 }
 
 func (ctx *context) tplPropType(prop *token.Property) string {

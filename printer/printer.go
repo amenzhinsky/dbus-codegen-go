@@ -148,8 +148,12 @@ const (
 {{- end}}
 )
 {{- define "annotations"}}
-{{- range $annotation := .Annotations -}}
-// @{{$annotation.Name}} = {{$annotation.Value}}
+{{- if ne (len .Annotations) 0 }}
+//
+// Annotations:
+{{- range $annotation := .Annotations}}
+//   @{{$annotation.Name}} = {{$annotation.Value}}
+{{- end}}
 {{- end}}
 {{- end}}
 {{range $iface := .Interfaces}}
@@ -206,9 +210,13 @@ type {{ifaceType $iface}} struct {
 
 {{range $method := $iface.Methods}}
 // {{methodType $method}} calls {{$iface.Name}}.{{$method.Name}} method.
+{{- if methodIsDeprecated $method}}
+//
+// Deprecated will be removed later.
+{{- end}}
 {{- template "annotations" $method}}
 func (o *{{ifaceType $iface}}) {{methodType $method}}(ctx context.Context, {{joinMethodInArgs $method}}) ({{joinMethodOutArgs $method}}err error) {
-	err = o.object.CallWithContext(ctx, {{ifaceNameConst $iface}} + ".{{$method.Name}}", 0, {{joinArgNames $method.In}}).Store({{joinStoreArgs $method.Out}})
+	err = o.object.CallWithContext(ctx, {{ifaceNameConst $iface}} + ".{{$method.Name}}", {{methodFlags $method}}, {{joinArgNames $method.In}}).Store({{joinStoreArgs $method.Out}})
 	return
 }
 {{end}}
