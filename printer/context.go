@@ -62,6 +62,7 @@ type context struct {
 
 	tpl      *template.Template
 	gofmt    bool
+	camelize bool
 	prefixes []string
 }
 
@@ -93,6 +94,9 @@ func (ctx *context) tplIfaceType(iface *token.Interface) string {
 		return name
 	}
 	return ifaceRegexp.ReplaceAllStringFunc(name, func(s string) string {
+		if ctx.camelize {
+			return strings.ToUpper(s[1:])
+		}
 		return "_" + strings.ToUpper(s[1:])
 	})
 }

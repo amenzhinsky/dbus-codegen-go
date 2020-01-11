@@ -30,6 +30,7 @@ var (
 	outputFlag     string
 	serverOnlyFlag bool
 	clientOnlyFlag bool
+	camelizeFlag   bool
 )
 
 type stringsVar []string
@@ -69,6 +70,7 @@ Options:
 	flag.StringVar(&outputFlag, "output", "", "path to output destination")
 	flag.BoolVar(&serverOnlyFlag, "server-only", false, "generate only server-side code")
 	flag.BoolVar(&clientOnlyFlag, "client-only", false, "generate only client-side code")
+	flag.BoolVar(&camelizeFlag, "camelize", false, "camelize type names omitting underscores")
 	flag.Parse()
 
 	if err := run(); err != nil {
@@ -156,6 +158,7 @@ func run() error {
 		printer.WithPrefixes(prefixesFlag),
 		printer.WithServerOnly(serverOnlyFlag),
 		printer.WithClientOnly(clientOnlyFlag),
+		printer.WithCamelize(camelizeFlag),
 	)
 }
 

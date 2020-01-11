@@ -61,6 +61,9 @@ func TestItCompiles(t *testing.T) {
 	for _, file := range xmlFiles {
 		t.Run(file, func(t *testing.T) {
 			checkCompile(t, "testdata/test_it_compiles.gof", file)
+			t.Run("camelize", func(t *testing.T) {
+				checkCompile(t, "testdata/test_it_compiles.gof", "-camelize", file)
+			})
 			t.Run("server-only", func(t *testing.T) {
 				checkCompile(t, "testdata/test_it_compiles.gof", "-server-only", file)
 			})
