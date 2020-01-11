@@ -4,11 +4,11 @@
 
 The project depends only on [github.com/godbus/dbus](https://github.com/godbus/dbus) module and cannot be used separately because it operates its data types.
 
-CLI and generated code API is a subject to change until v1.0.0.
+CLI and generated code API is a subject to change until `v1.0.0`.
 
 ## Overview
 
-The tool generates two types of code-bases: server and client, so if we take use the following XML:
+The tool generates two types of code-bases: server and client (or can be limited to just one of them by using `-client-only` or `-server-only` options), so if we take use the following XML:
 
 ```xml
 <node>
@@ -175,6 +175,7 @@ Here's an example of a bit more advanced usage, where we're changing the generat
 dbus-codegen-go \
 	-dest=org.freedesktop.systemd1 \
 	-package=systemd \
+	-camelize \
 	-only=org.freedesktop.systemd1.Manager \
 	-only=org.freedesktop.systemd1.Service \
 	-prefix=org.freedesktop.systemd1

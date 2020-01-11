@@ -21,6 +21,16 @@ func newContext(ifaces []*token.Interface, opts ...PrintOption) (*context, error
 		opt(ctx)
 	}
 
+	if ctx.PackageName == "" {
+		return nil, errors.New("package name is empty")
+	}
+	if !identRegexp.MatchString(ctx.PackageName) {
+		return nil, errors.New("package name is not valid")
+	}
+	if len(ifaces) == 0 {
+		return nil, errors.New("no interfaces given")
+	}
+
 	ctx.tpl = template.New("main").Funcs(template.FuncMap{
 		"haveSignals":       ctx.tplHaveSignals,
 		"ifaceNameConst":    ctx.tplIfaceNameConst,
@@ -44,12 +54,6 @@ func newContext(ifaces []*token.Interface, opts ...PrintOption) (*context, error
 		"joinSignalValues":  ctx.tplJoinSignalValues,
 		"joinSignalArgs":    ctx.tplJoinSignalArgs,
 	})
-	if !identRegexp.MatchString(ctx.PackageName) {
-		return nil, errors.New("package name is not valid")
-	}
-	if len(ifaces) == 0 {
-		return nil, errors.New("no interfaces given")
-	}
 	return ctx, nil
 }
 

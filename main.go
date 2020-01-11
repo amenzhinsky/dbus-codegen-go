@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/xml"
 	"errors"
 	"flag"
@@ -8,7 +9,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/amenzhinsky/dbus-codegen-go/parser"
@@ -22,7 +22,7 @@ var (
 	destFlag       []string
 	onlyFlag       []string
 	exceptFlag     []string
-	prefixesFlag   []string
+	prefixFlag     []string
 	systemFlag     bool
 	packageFlag    string
 	gofmtFlag      bool
@@ -33,41 +33,25 @@ var (
 	camelizeFlag   bool
 )
 
-type stringsVar []string
-
-func (ss *stringsVar) String() string {
-	return "[" + strings.Join(*ss, ", ") + "]"
-}
-
-func (ss *stringsVar) Set(arg string) error {
-	for _, s := range strings.Split(arg, ",") {
-		if s == "" {
-			continue
-		}
-		*ss = append(*ss, s)
-	}
-	return nil
-}
-
 func main() {
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, `Usage: %s [option...] [PATH...]
+		fmt.Fprintf(os.Stderr, `Usage: dbus-codegen-go [option...] PATH...
 
 D-Bus Introspection Data Format code generator for Golang.
 
 Options:
-`, filepath.Base(os.Args[0]))
+`)
 		flag.PrintDefaults()
 	}
-	flag.Var((*stringsVar)(&destFlag), "dest", "destination name(s) to introspect")
-	flag.Var((*stringsVar)(&onlyFlag), "only", "generate code only for the named interfaces")
-	flag.Var((*stringsVar)(&exceptFlag), "except", "skip the named interfaces")
-	flag.Var((*stringsVar)(&prefixesFlag), "prefix", "prefix to strip from interface names")
+	flag.Var((*stringsVar)(&destFlag), "dest", "`destination` name(s) to introspect")
+	flag.Var((*stringsVar)(&onlyFlag), "only", "generate code only for the named `interface`s")
+	flag.Var((*stringsVar)(&exceptFlag), "except", "skip the named `interface`s")
+	flag.Var((*stringsVar)(&prefixFlag), "prefix", "`prefix` to strip from interface names")
 	flag.BoolVar(&systemFlag, "system", false, "connect to the system bus")
-	flag.StringVar(&packageFlag, "package", "dbusgen", "generated package name")
+	flag.StringVar(&packageFlag, "package", "dbusgen", "generated package `name`")
 	flag.BoolVar(&gofmtFlag, "gofmt", true, "gofmt results")
 	flag.BoolVar(&xmlFlag, "xml", false, "combine the dest's introspections into a single document")
-	flag.StringVar(&outputFlag, "output", "", "path to output destination")
+	flag.StringVar(&outputFlag, "output", "", "`path` to output destination")
 	flag.BoolVar(&serverOnlyFlag, "server-only", false, "generate only server-side code")
 	flag.BoolVar(&clientOnlyFlag, "client-only", false, "generate only client-side code")
 	flag.BoolVar(&camelizeFlag, "camelize", false, "camelize type names omitting underscores")
@@ -143,23 +127,30 @@ func run() error {
 			filtered = append(filtered, iface)
 		}
 	}
-	var output io.Writer = os.Stdout
-	if outputFlag != "" {
-		var err error
-		output, err = os.OpenFile(outputFlag, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-		if err != nil {
-			return err
-		}
-	}
 
-	return printer.Print(output, filtered,
+	buf := &bytes.Buffer{}
+	if err := printer.Print(buf, filtered,
 		printer.WithPackageName(packageFlag),
 		printer.WithGofmt(gofmtFlag),
-		printer.WithPrefixes(prefixesFlag),
+		printer.WithPrefixes(prefixFlag),
 		printer.WithServerOnly(serverOnlyFlag),
 		printer.WithClientOnly(clientOnlyFlag),
 		printer.WithCamelize(camelizeFlag),
-	)
+	); err != nil {
+		return err
+	}
+
+	output := os.Stdout
+	if outputFlag != "" {
+		f, err := os.OpenFile(outputFlag, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		output = f
+	}
+	_, err := io.Copy(output, buf)
+	return err
 }
 
 func connect(system bool) (*dbus.Conn, error) {
@@ -261,6 +252,22 @@ func introspectDest(
 		if err := introspectDest(conn, dest, path+"/"+dbus.ObjectPath(child.Name), fn); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+type stringsVar []string
+
+func (ss *stringsVar) String() string {
+	return "[" + strings.Join(*ss, ", ") + "]"
+}
+
+func (ss *stringsVar) Set(arg string) error {
+	for _, s := range strings.Split(arg, ",") {
+		if s == "" {
+			continue
+		}
+		*ss = append(*ss, s)
 	}
 	return nil
 }
