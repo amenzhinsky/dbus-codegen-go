@@ -61,6 +61,12 @@ func TestItCompiles(t *testing.T) {
 	for _, file := range xmlFiles {
 		t.Run(file, func(t *testing.T) {
 			checkCompile(t, "testdata/test_it_compiles.gof", file)
+			t.Run("server-only", func(t *testing.T) {
+				checkCompile(t, "testdata/test_it_compiles.gof", "-server-only", file)
+			})
+			t.Run("client-only", func(t *testing.T) {
+				checkCompile(t, "testdata/test_it_compiles.gof", "-client-only", file)
+			})
 		})
 	}
 }
@@ -83,14 +89,14 @@ func TestCompile(t *testing.T) {
 	}
 }
 
-func checkCompile(t *testing.T, goFile string, xmlFile string) {
+func checkCompile(t *testing.T, goFile string, args ...string) {
 	t.Helper()
-	b, err := generate(xmlFile)
+	b, err := generate(args...)
 	if err != nil {
-		t.Fatalf("generate(%q) error: %s", xmlFile, err)
+		t.Fatalf("generate(%v) error: %s", args, err)
 	}
 	if err := compile(b, goFile); err != nil {
-		t.Fatalf("compile(%q, %v) error: %s", goFile, xmlFile, err)
+		t.Fatalf("compile(%q, %v) error: %s", goFile, args, err)
 	}
 }
 
