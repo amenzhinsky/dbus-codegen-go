@@ -9,7 +9,7 @@ go generate
 Now you can list and watch an object manager initial state and changes, for example `org.bluez`: 
 
 ```bash
-go run . -system -dest=org.bluez
+go run . -system org.bluez
 ```
 
 In a parallel console you can trigger events activity:
