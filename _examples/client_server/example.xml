@@ -1,0 +1,7 @@
+<node>
+    <interface name="org.example.Demo">
+        <method name="WelcomeMessage">
+            <arg name="outputMessage" type="s" direction="out"></arg>
+        </method>
+    </interface>
+</node>
