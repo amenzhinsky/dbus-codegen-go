@@ -287,10 +287,10 @@ func Print(out io.Writer, ifaces []*token.Interface, opts ...PrintOption) error 
 
 	if !ctx.ServerOnly {
 		ctx.addImport("context")
-
-		// TODO: only client if has signals
-		ctx.addImport("fmt")
-		ctx.addImport("errors")
+		if haveSignals(ifaces) {
+			ctx.addImport("fmt")
+			ctx.addImport("errors")
+		}
 	}
 
 	var buf bytes.Buffer
@@ -311,4 +311,13 @@ func Print(out io.Writer, ifaces []*token.Interface, opts ...PrintOption) error 
 	}
 	_, err = out.Write(buf.Bytes())
 	return err
+}
+
+func haveSignals(ifaces []*token.Interface) bool {
+	for _, iface := range ifaces {
+		if len(iface.Signals) != 0 {
+			return true
+		}
+	}
+	return false
 }

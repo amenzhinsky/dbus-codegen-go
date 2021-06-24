@@ -3,7 +3,6 @@ package integration_test
 import (
 	"crypto/sha256"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"testing"
@@ -93,7 +92,7 @@ func TestScenario(t *testing.T) {
 	} {
 		goFile, xmlFile := tc[0], tc[1]
 		t.Run(goFile, func(t *testing.T) {
-			b, err := ioutil.ReadFile(goFile)
+			b, err := os.ReadFile(goFile)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -123,16 +122,16 @@ func generate(args ...string) ([]byte, error) {
 }
 
 func compile(gen, src []byte) error {
-	temp, err := ioutil.TempDir("", "")
+	temp, err := os.MkdirTemp("", "")
 	if err != nil {
 		return err
 	}
-	defer os.RemoveAll(temp)
+	//defer os.RemoveAll(temp)
 
-	if err = ioutil.WriteFile(temp+"/gen.go", gen, 0644); err != nil {
+	if err = os.WriteFile(temp+"/gen.go", gen, 0644); err != nil {
 		return err
 	}
-	if err = ioutil.WriteFile(temp+"/main.go", src, 0644); err != nil {
+	if err = os.WriteFile(temp+"/main.go", src, 0644); err != nil {
 		return err
 	}
 	if out, err := exec.Command(

@@ -7,7 +7,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -100,7 +99,7 @@ func run() error {
 		}
 	case flag.NArg() > 0:
 		for _, filename := range flag.Args() {
-			b, err := ioutil.ReadFile(filename)
+			b, err := os.ReadFile(filename)
 			if err != nil {
 				return err
 			}
@@ -111,7 +110,7 @@ func run() error {
 			ifaces = merge(ifaces, chunk)
 		}
 	default:
-		b, err := ioutil.ReadAll(os.Stdin)
+		b, err := io.ReadAll(os.Stdin)
 		if err != nil {
 			return err
 		}
