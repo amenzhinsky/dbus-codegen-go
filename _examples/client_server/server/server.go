@@ -2,40 +2,40 @@
 package main
 
 import (
-        "github.com/godbus/dbus/v5"
+	"github.com/godbus/dbus/v5"
 )
 
 // Interface name constants.
 const (
-        InterfaceOrg_Example_Demo = "org.example.Demo"
+	InterfaceOrg_Example_Demo = "org.example.Demo"
 )
 
 // Org_Example_Demoer is org.example.Demo interface.
 type Org_Example_Demoer interface {
-        // WelcomeMessage is org.example.Demo.WelcomeMessage method.
-        WelcomeMessage() (outputMessage string, err *dbus.Error)
+	// WelcomeMessage is org.example.Demo.WelcomeMessage method.
+	WelcomeMessage() (outputMessage string, err *dbus.Error)
 }
 
 // ExportOrg_Example_Demo exports the given object that implements org.example.Demo on the bus.
 func ExportOrg_Example_Demo(conn *dbus.Conn, path dbus.ObjectPath, v Org_Example_Demoer) error {
-        return conn.ExportSubtreeMethodTable(map[string]interface{}{
-                "WelcomeMessage": v.WelcomeMessage,
-        }, path, InterfaceOrg_Example_Demo)
+	return conn.ExportSubtreeMethodTable(map[string]interface{}{
+		"WelcomeMessage": v.WelcomeMessage,
+	}, path, InterfaceOrg_Example_Demo)
 }
 
 // UnexportOrg_Example_Demo unexports org.example.Demo interface on the named path.
 func UnexportOrg_Example_Demo(conn *dbus.Conn, path dbus.ObjectPath) error {
-        return conn.Export(nil, path, InterfaceOrg_Example_Demo)
+	return conn.Export(nil, path, InterfaceOrg_Example_Demo)
 }
 
 // UnimplementedOrg_Example_Demo can be embedded to have forward compatible server implementations.
 type UnimplementedOrg_Example_Demo struct{}
 
 func (*UnimplementedOrg_Example_Demo) iface() string {
-        return InterfaceOrg_Example_Demo
+	return InterfaceOrg_Example_Demo
 }
 
 func (*UnimplementedOrg_Example_Demo) WelcomeMessage() (outputMessage string, err *dbus.Error) {
-        err = &dbus.ErrMsgUnknownMethod
-        return
+	err = &dbus.ErrMsgUnknownMethod
+	return
 }
