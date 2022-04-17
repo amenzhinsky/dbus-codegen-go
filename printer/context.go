@@ -2,13 +2,16 @@ package printer
 
 import (
 	"errors"
+	"fmt"
 	gotoken "go/token"
+	"io"
 	"regexp"
 	"strconv"
 	"strings"
 	"text/template"
 
 	"github.com/amenzhinsky/dbus-codegen-go/token"
+	"github.com/godbus/dbus/v5/introspect"
 )
 
 func newContext(ifaces []*token.Interface, opts ...PrintOption) (*context, error) {
@@ -55,6 +58,10 @@ func newContext(ifaces []*token.Interface, opts ...PrintOption) (*context, error
 		"joinStoreArgs":      ctx.tplJoinStoreArgs,
 		"joinSignalValues":   ctx.tplJoinSignalValues,
 		"joinSignalArgs":     ctx.tplJoinSignalArgs,
+		"methodsString":      ctx.tplMethodsString,
+		"signalsString":      ctx.tplSignalsString,
+		"propsString":        ctx.tplPropsString,
+		"annotationsString":  ctx.tplAnnotationsString,
 	})
 	return ctx, nil
 }
@@ -65,6 +72,7 @@ type context struct {
 	Interfaces  []*token.Interface
 	ServerOnly  bool
 	ClientOnly  bool
+	NodeStr     string
 
 	tpl      *template.Template
 	gofmt    bool
@@ -282,4 +290,103 @@ func (ctx *context) tplJoinArgNames(args []*token.Arg) string {
 		buf.WriteString(ctx.tplArgName(args[i], "in", i, false))
 	}
 	return buf.String()
+}
+
+func (ctx *context) tplPropsString(props []introspect.Property) string {
+	var buf strings.Builder
+	buf.WriteString("[]introspect.Property{")
+	for _, p := range props {
+		buf.WriteString("{")
+		writeProp(&buf, p)
+		buf.WriteString("},\n")
+	}
+	buf.WriteString("},")
+	return buf.String()
+}
+
+func (ctx *context) tplSignalsString(singals []introspect.Signal) string {
+	var buf strings.Builder
+	buf.WriteString("[]introspect.Signal{")
+	for _, sig := range singals {
+		buf.WriteString("{")
+		writeSignal(&buf, sig)
+		buf.WriteString("},\n")
+	}
+	buf.WriteString("},")
+	return buf.String()
+}
+
+func (ctx *context) tplMethodsString(methods []introspect.Method) string {
+	var buf strings.Builder
+	buf.WriteString("[]introspect.Method{")
+	for _, m := range methods {
+		buf.WriteString("{")
+		writeMethod(&buf, m)
+		buf.WriteString("},\n")
+	}
+	buf.WriteString("},")
+	return buf.String()
+}
+
+func writeMethod(out io.Writer, method introspect.Method) {
+	fmt.Fprintf(out, `Name:"%s",`, method.Name)
+	fmt.Fprint(out, "Args:[]introspect.Arg{\n")
+	writeArgs(out, method.Args)
+	fmt.Fprintf(out, "},")
+}
+func (ctx *context) tplAnnotationsString(anns []introspect.Annotation) string {
+	var buf strings.Builder
+	buf.WriteString("[]introspect.Annotation{\n")
+	writeAnnotations(&buf, anns)
+	buf.WriteString("},")
+	return buf.String()
+}
+
+func writeArgs(out io.Writer, args []introspect.Arg) {
+	for _, arg := range args {
+		fmt.Fprint(out, "{")
+		writeArg(out, arg)
+		fmt.Fprint(out, "},\n")
+	}
+}
+func writeArg(out io.Writer, arg introspect.Arg) {
+	tml := `Name: "%s",Type: "%s",Direction: "%s",`
+	fmt.Fprintf(out, tml, arg.Name, arg.Type, arg.Direction)
+}
+
+func writeAnnotations(out io.Writer, anns []introspect.Annotation) {
+	for _, ann := range anns {
+		fmt.Fprint(out, "{")
+		writeAnnotation(out, ann)
+		fmt.Fprint(out, "},\n")
+	}
+}
+func writeAnnotation(out io.Writer, ann introspect.Annotation) {
+	fmt.Fprintf(out, `Name:"%s",Value:"%s"`, ann.Name, ann.Value)
+
+}
+
+func writeProp(out io.Writer, prop introspect.Property) {
+	fmt.Fprintf(out, `Name:"%s",`, prop.Name)
+	fmt.Fprintf(out, `Type:"%s",`, prop.Type)
+	fmt.Fprintf(out, `Access:"%s",`, prop.Access)
+	if len(prop.Annotations) != 0 {
+		fmt.Fprint(out, "Annotations:[]introspect.Annotation{\n")
+		writeAnnotations(out, prop.Annotations)
+		fmt.Fprint(out, "},")
+	}
+}
+
+func writeSignal(out io.Writer, signal introspect.Signal) {
+	fmt.Fprintf(out, `Name:"%s",`, signal.Name)
+	if len(signal.Args) != 0 {
+		fmt.Fprint(out, "Args:[]introspect.Arg{\n")
+		writeArgs(out, signal.Args)
+		fmt.Fprint(out, "},")
+	}
+	if len(signal.Annotations) != 0 {
+		fmt.Fprint(out, "Annotations:[]introspect.Annotation{\n")
+		writeAnnotations(out, signal.Annotations)
+		fmt.Fprint(out, "},")
+	}
 }

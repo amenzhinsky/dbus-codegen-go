@@ -24,13 +24,14 @@ func ParseNode(node *introspect.Node) ([]*token.Interface, error) {
 		panic("node is nil")
 	}
 	ifaces := make([]*token.Interface, len(node.Interfaces))
-	for i := range node.Interfaces {
+	for i, iface := range node.Interfaces {
 		ifaces[i] = &token.Interface{
-			Name:        node.Interfaces[i].Name,
-			Methods:     parseMethods(node.Interfaces[i].Methods),
-			Properties:  parseProperties(node.Interfaces[i].Properties),
-			Signals:     parseSignals(node.Interfaces[i].Signals),
-			Annotations: parseAnnotations(node.Interfaces[i].Annotations),
+			Name:         node.Interfaces[i].Name,
+			Methods:      parseMethods(node.Interfaces[i].Methods),
+			Properties:   parseProperties(node.Interfaces[i].Properties),
+			Signals:      parseSignals(node.Interfaces[i].Signals),
+			Annotations:  parseAnnotations(node.Interfaces[i].Annotations),
+			RawInterface: iface,
 		}
 	}
 	return ifaces, nil

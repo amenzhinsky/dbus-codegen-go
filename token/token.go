@@ -1,12 +1,15 @@
 package token
 
+import "github.com/godbus/dbus/v5/introspect"
+
 // Interface is a D-Bus interface.
 type Interface struct {
-	Name        string
-	Methods     []*Method
-	Properties  []*Property
-	Signals     []*Signal
-	Annotations []*Annotation
+	Name         string
+	Methods      []*Method
+	Properties   []*Property
+	Signals      []*Signal
+	Annotations  []*Annotation
+	RawInterface introspect.Interface
 }
 
 // Method is a D-Bus method.
