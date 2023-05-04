@@ -71,6 +71,21 @@ import (
 {{- end}}
 )
 
+{{if not $.ClientOnly -}}
+var (
+{{- range $iface := .Interfaces}}
+	// Introspection for {{$iface.Name}}
+	IntrospectData{{ifaceType $iface}} = introspect.Interface{
+			Name: "{{$iface.RawInterface.Name}}",
+			Methods: {{methodsString .RawInterface.Methods}}
+			Signals: {{signalsString .RawInterface.Signals}}
+			Properties: {{propsString .RawInterface.Properties}}
+			Annotations:  {{annotationsString .RawInterface.Annotations}}
+	}
+{{- end}}
+)
+{{end -}}
+
 {{if haveSignals .Interfaces}}
 // Signal is a common interface for all signals.
 type Signal interface {
@@ -171,6 +186,16 @@ type {{serverType $iface}} interface {
 
 // Export{{ifaceType $iface}} exports the given object that implements {{$iface.Name}} on the bus.
 func Export{{ifaceType $iface}}(conn *dbus.Conn, path dbus.ObjectPath, v {{serverType $iface}}) error {
+	n := &introspect.Node{
+		Name: string(path),
+		Interfaces:[]introspect.Interface{
+			IntrospectData{{ifaceType $iface}},
+		},
+	}
+	err := conn.Export(introspect.NewIntrospectable(n), path, "org.freedesktop.DBus.Introspectable")
+	if err != nil {
+		return err
+	}
 	return conn.ExportSubtreeMethodTable(map[string]interface{}{
 		{{range $method := $iface.Methods -}}
 		"{{$method.Name}}": v.{{methodType $method}},
@@ -288,6 +313,10 @@ func Print(out io.Writer, ifaces []*token.Interface, opts ...PrintOption) error 
 
 	ctx.addImport("github.com/godbus/dbus/v5")
 
+	if !ctx.ClientOnly {
+		ctx.addImport("github.com/godbus/dbus/v5/introspect")
+	}
+
 	if !ctx.ServerOnly {
 		ctx.addImport("context")
 		if haveSignals(ifaces) {
@@ -297,6 +326,9 @@ func Print(out io.Writer, ifaces []*token.Interface, opts ...PrintOption) error 
 	}
 
 	var buf bytes.Buffer
+	// if err = template.Must(ctx.tpl.Parse(clientTpl)).Execute(os.Stdout, ctx); err != nil {
+	// 	return err
+	// }
 	if err = template.Must(ctx.tpl.Parse(clientTpl)).Execute(&buf, ctx); err != nil {
 		return err
 	}

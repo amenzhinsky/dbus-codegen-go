@@ -3,6 +3,21 @@ package main
 
 import (
 	"github.com/godbus/dbus/v5"
+	"github.com/godbus/dbus/v5/introspect"
+)
+
+var (
+	// Introspection for org.example.Demo
+	IntrospectDataOrg_Example_Demo = introspect.Interface{
+		Name: "org.example.Demo",
+		Methods: []introspect.Method{{Name: "WelcomeMessage", Args: []introspect.Arg{
+			{Name: "outputMessage", Type: "s", Direction: "out"},
+		}},
+		},
+		Signals:     []introspect.Signal{},
+		Properties:  []introspect.Property{},
+		Annotations: []introspect.Annotation{},
+	}
 )
 
 // Interface name constants.
@@ -18,6 +33,16 @@ type Org_Example_Demoer interface {
 
 // ExportOrg_Example_Demo exports the given object that implements org.example.Demo on the bus.
 func ExportOrg_Example_Demo(conn *dbus.Conn, path dbus.ObjectPath, v Org_Example_Demoer) error {
+	n := &introspect.Node{
+		Name: string(path),
+		Interfaces: []introspect.Interface{
+			IntrospectDataOrg_Example_Demo,
+		},
+	}
+	err := conn.Export(introspect.NewIntrospectable(n), path, "org.freedesktop.DBus.Introspectable")
+	if err != nil {
+		return err
+	}
 	return conn.ExportSubtreeMethodTable(map[string]interface{}{
 		"WelcomeMessage": v.WelcomeMessage,
 	}, path, InterfaceOrg_Example_Demo)
